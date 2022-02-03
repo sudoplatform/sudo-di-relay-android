@@ -7,6 +7,7 @@ import com.apollographql.apollo.exception.ApolloHttpException
 import com.sudoplatform.sudodirelay.graphql.CallbackHolder
 import com.sudoplatform.sudodirelay.graphql.DeletePostBoxMutation
 import com.sudoplatform.sudodirelay.graphql.type.IdAsInput
+import com.sudoplatform.sudouser.SudoUserClient
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
 import io.kotlintest.shouldThrow
@@ -35,7 +36,7 @@ import kotlin.RuntimeException
 class SudoDIRelayDeletePostboxTest : BaseTests() {
     private val mutationInput by before {
         IdAsInput.builder()
-            .id("cid")
+            .connectionId("cid")
             .build()
     }
 
@@ -64,10 +65,18 @@ class SudoDIRelayDeletePostboxTest : BaseTests() {
         }
     }
 
+    private val mockUserClient by before {
+        mock<SudoUserClient>().stub {
+            on { getSubject() } doReturn "subject"
+            on { getRefreshToken() } doReturn "refreshToken"
+        }
+    }
+
     private val client by before {
         DefaultSudoDIRelayClient(
             mockContext,
             mockAppSyncClient,
+            mockUserClient,
             mockLogger
         )
     }
@@ -101,7 +110,7 @@ class SudoDIRelayDeletePostboxTest : BaseTests() {
 
             val actualMutationInput = ArgumentCaptor.forClass(DeletePostBoxMutation::class.java)
             verify(mockAppSyncClient).mutate(actualMutationInput.capture())
-            actualMutationInput.value.variables().input().id() shouldBe connectionID
+            actualMutationInput.value.variables().input().connectionId() shouldBe connectionID
         }
 
     @Test

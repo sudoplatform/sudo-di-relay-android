@@ -10,6 +10,7 @@ import com.sudoplatform.sudodirelay.graphql.GetMessagesQuery
 import com.sudoplatform.sudodirelay.graphql.type.Direction
 import com.sudoplatform.sudodirelay.graphql.type.IdAsInput
 import com.sudoplatform.sudodirelay.types.RelayMessage
+import com.sudoplatform.sudouser.SudoUserClient
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
 import io.kotlintest.shouldThrow
@@ -38,7 +39,7 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
 
     private val queryInput by before {
         IdAsInput.builder()
-            .id("null")
+            .connectionId("null")
             .build()
     }
 
@@ -50,8 +51,7 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
                 "cid",
                 "hello",
                 Direction.INBOUND,
-                "Mon, 21 Jun 2021 19:11:50 GMT",
-                null
+                (1_624_302_710_000).toDouble()
             )
         )
     }
@@ -60,21 +60,11 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
         listOf(
             GetMessagesQuery.GetMessage(
                 "",
-                "init",
-                "123",
-                "",
-                Direction.OUTBOUND,
-                "Fri, 2 Jul 2021 21:30:00 GMT",
-                null
-            ),
-            GetMessagesQuery.GetMessage(
-                "",
                 "001",
                 "123",
                 "hi",
                 Direction.INBOUND,
-                "Sun, 4 Jul 2021 21:30:00 GMT",
-                null
+                (1_623_302_710_000).toDouble()
             ),
             GetMessagesQuery.GetMessage(
                 "",
@@ -82,8 +72,7 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
                 "123",
                 "bye",
                 Direction.OUTBOUND,
-                "Mon, 5 Jul 2021 8:00:00 GMT",
-                null
+                (1_622_342_710_000).toDouble()
             ),
             GetMessagesQuery.GetMessage(
                 "",
@@ -91,8 +80,7 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
                 "123",
                 "hello world",
                 Direction.INBOUND,
-                "Sat, 3 Jul 2021 12:45:00 GMT",
-                null
+                (1_624_902_710_000).toDouble()
             )
         )
     }
@@ -117,10 +105,18 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
         }
     }
 
+    private val mockUserClient by before {
+        mock<SudoUserClient>().stub {
+            on { getSubject() } doReturn "subject"
+            on { getRefreshToken() } doReturn "refreshToken"
+        }
+    }
+
     private val client by before {
         DefaultSudoDIRelayClient(
             mockContext,
             mockAppSyncClient,
+            mockUserClient,
             mockLogger
         )
     }
@@ -153,7 +149,7 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
         verify(mockAppSyncClient).query(actualQueryInput.capture())
 
         // verify input connectionID not changed
-        actualQueryInput.value.variables().input().id() shouldBe connectionId
+        actualQueryInput.value.variables().input().connectionId() shouldBe connectionId
     }
 
     @Test
@@ -187,7 +183,7 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
     }
 
     @Test
-    fun `getMessages() should return list in order of date without init message`() =
+    fun `getMessages() should return list in order of date`() =
         runBlocking<Unit> {
             queryHolder.callback shouldBe null
 
@@ -212,68 +208,9 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
             result shouldNotBe null
             result.size shouldBe 3
 
-            result[0].messageId shouldBe "003"
+            result[0].messageId shouldBe "002"
             result[1].messageId shouldBe "001"
-            result[2].messageId shouldBe "002"
-
-            verify(mockAppSyncClient).query(any<GetMessagesQuery>())
-        }
-
-    @Test
-    fun `getMessages() should throw when query result data is empty list`() =
-        runBlocking<Unit> {
-            queryHolder.callback shouldBe null
-
-            val queryResultWithEmptyList by before { listOf<GetMessagesQuery.GetMessage>() }
-
-            val responseWithEmptyList by before {
-                Response.builder<GetMessagesQuery.Data>(GetMessagesQuery(queryInput))
-                    .data(GetMessagesQuery.Data(queryResultWithEmptyList))
-                    .build()
-            }
-
-            val deferredResult = async(Dispatchers.IO) {
-                shouldThrow<SudoDIRelayClient.DIRelayException.InvalidPostboxException> {
-                    client.getMessages("123")
-                }
-            }
-
-            deferredResult.start()
-
-            delay(100)
-
-            queryHolder.callback shouldNotBe null
-            queryHolder.callback?.onResponse(responseWithEmptyList)
-
-            deferredResult.await()
-
-            verify(mockAppSyncClient).query(any<GetMessagesQuery>())
-        }
-
-    @Test
-    fun `getMessages() should throw error when query response is null`() =
-        runBlocking<Unit> {
-            queryHolder.callback shouldBe null
-
-            val nullQueryResponse by before {
-                Response.builder<GetMessagesQuery.Data>(GetMessagesQuery(queryInput))
-                    .data(null)
-                    .build()
-            }
-
-            val deferredResult = async(Dispatchers.IO) {
-                shouldThrow<SudoDIRelayClient.DIRelayException.InvalidPostboxException> {
-                    client.getMessages("123")
-                }
-            }
-
-            deferredResult.start()
-            delay(100)
-
-            queryHolder.callback shouldNotBe null
-            queryHolder.callback?.onResponse(nullQueryResponse)
-
-            deferredResult.await()
+            result[2].messageId shouldBe "003"
 
             verify(mockAppSyncClient).query(any<GetMessagesQuery>())
         }

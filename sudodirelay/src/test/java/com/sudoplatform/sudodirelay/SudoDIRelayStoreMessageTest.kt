@@ -9,7 +9,7 @@ import com.sudoplatform.sudodirelay.graphql.StoreMessageMutation
 import com.sudoplatform.sudodirelay.graphql.type.Direction
 import com.sudoplatform.sudodirelay.graphql.type.WriteToRelayInput
 import com.sudoplatform.sudodirelay.types.RelayMessage
-import com.sudoplatform.sudodirelay.types.transformers.toDate
+import com.sudoplatform.sudouser.SudoUserClient
 import io.kotlintest.fail
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
@@ -45,8 +45,7 @@ class SudoDIRelayStoreMessageTest : BaseTests() {
             .connectionId("cid")
             .cipherText("init")
             .direction(Direction.OUTBOUND)
-            .utcTimestamp("Mon, 21 Jun 2021 19:11:50 GMT")
-            .nextToken(null)
+            .utcTimestamp((1_624_302_710_000).toDouble())
             .build()
     }
 
@@ -57,8 +56,7 @@ class SudoDIRelayStoreMessageTest : BaseTests() {
             "cid",
             "hello world",
             Direction.OUTBOUND,
-            "Mon, 21 Jun 2021 19:11:50 GMT",
-            null
+            (1_624_302_710_000).toDouble()
         )
     }
 
@@ -80,10 +78,18 @@ class SudoDIRelayStoreMessageTest : BaseTests() {
         }
     }
 
+    private val mockUserClient by before {
+        mock<SudoUserClient>().stub {
+            on { getSubject() } doReturn "subject"
+            on { getRefreshToken() } doReturn "refreshToken"
+        }
+    }
+
     private val client by before {
         DefaultSudoDIRelayClient(
             mockContext,
             mockAppSyncClient,
+            mockUserClient,
             mockLogger
         )
     }
@@ -129,8 +135,7 @@ class SudoDIRelayStoreMessageTest : BaseTests() {
                 cipherText() shouldBe "hello"
                 direction() shouldBe Direction.OUTBOUND
                 // check timestamp within 2 mins of accuracy
-                utcTimestamp().toDate().after(Date(Date().time - twoMinutesMs)) shouldBe true
-                nextToken() shouldBe null
+                Date(utcTimestamp().toLong()).after(Date(Date().time - twoMinutesMs)) shouldBe true
             }
         }
 
@@ -168,33 +173,6 @@ class SudoDIRelayStoreMessageTest : BaseTests() {
                 timestamp.after(Date(Date().time - twoMinutesMs)) shouldBe true
             }
         }
-
-    @Test
-    fun `storeMessage() should throw on null response`() = runBlocking<Unit> {
-        mutationHolder.callback shouldBe null
-
-        val nullMutationResponse by before {
-            Response.builder<StoreMessageMutation.Data>(StoreMessageMutation(mutationInput))
-                .data(null)
-                .build()
-        }
-
-        val deferredResult = async(Dispatchers.IO) {
-            shouldThrow<SudoDIRelayClient.DIRelayException.InvalidPostboxException> {
-                client.storeMessage("123", "hello")
-            }
-        }
-
-        deferredResult.start()
-        delay(100)
-
-        mutationHolder.callback shouldNotBe null
-        mutationHolder.callback?.onResponse(nullMutationResponse)
-
-        deferredResult.await()
-
-        verify(mockAppSyncClient).mutate(any<StoreMessageMutation>())
-    }
 
     @Test
     fun `storeMessage() should throw on apollo http error`() = runBlocking<Unit> {

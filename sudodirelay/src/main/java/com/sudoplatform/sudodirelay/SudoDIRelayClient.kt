@@ -8,7 +8,8 @@ package com.sudoplatform.sudodirelay
 
 import android.content.Context
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
-import com.sudoplatform.sudodirelay.appsync.AWSAppSyncClientFactory
+import com.sudoplatform.sudoapiclient.ApiClientManager
+import com.sudoplatform.sudoconfigmanager.DefaultSudoConfigManager
 import com.sudoplatform.sudodirelay.logging.LogConstants
 import com.sudoplatform.sudodirelay.subscription.DIRelayEventSubscriber
 import com.sudoplatform.sudodirelay.types.PostboxDeletionResult
@@ -16,6 +17,7 @@ import com.sudoplatform.sudodirelay.types.RelayMessage
 import com.sudoplatform.sudologging.AndroidUtilsLogDriver
 import com.sudoplatform.sudologging.LogLevel
 import com.sudoplatform.sudologging.Logger
+import com.sudoplatform.sudouser.SudoUserClient
 import java.util.Objects
 
 /**
@@ -33,6 +35,7 @@ interface SudoDIRelayClient {
 
     class Builder internal constructor() {
         private var context: Context? = null
+        private var sudoUserClient: SudoUserClient? = null
         private var appSyncClient: AWSAppSyncClient? = null
         private var logger: Logger =
             Logger(LogConstants.SUDOLOG_TAG, AndroidUtilsLogDriver(LogLevel.INFO))
@@ -42,6 +45,14 @@ interface SudoDIRelayClient {
          */
         fun setContext(context: Context) = also {
             this.context = context
+        }
+
+        /**
+         * Provide the implementation of the [SudoUserClient] used to perform
+         * sign in and ownership operations (required input).
+         */
+        fun setSudoUserClient(sudoUserClient: SudoUserClient) = also {
+            this.sudoUserClient = sudoUserClient
         }
 
         /**
@@ -68,13 +79,24 @@ interface SudoDIRelayClient {
         @Throws(NullPointerException::class)
         fun build(): SudoDIRelayClient {
             Objects.requireNonNull(context, "Context must be provided.")
+            Objects.requireNonNull(sudoUserClient, "SudoUserClient must be provided.")
 
-            val appSyncClient = appSyncClient
-                ?: AWSAppSyncClientFactory.getClientWithAPIKeyAuth(this@Builder.context!!)
+            val appSyncClient = appSyncClient ?: ApiClientManager.getClient(
+                this@Builder.context!!,
+                this@Builder.sudoUserClient!!
+            )
+
+            Objects.requireNonNull(
+                DefaultSudoConfigManager(this@Builder.context!!, this@Builder.logger)
+                    .getConfigSet("relayService")
+                    ?.get("httpEndpoint") as String?,
+                "The parameter 'relayService.httpEndpoint' was not found in sudo configuration."
+            )
 
             return DefaultSudoDIRelayClient(
                 context = context!!,
                 appSyncClient = appSyncClient,
+                sudoUserClient = sudoUserClient!!,
                 logger = logger
             )
         }
@@ -93,10 +115,10 @@ interface SudoDIRelayClient {
         class FailedException(message: String? = null, cause: Throwable? = null) :
             DIRelayException(message = message, cause = cause)
 
-        class InvalidPostboxException(message: String? = null, cause: Throwable? = null) :
+        class InvalidConnectionIDException(message: String? = null, cause: Throwable? = null) :
             DIRelayException(message = message, cause = cause)
 
-        class InvalidConnectionIDException(message: String? = null, cause: Throwable? = null) :
+        class UnauthorizedPostboxException(message: String? = null, cause: Throwable? = null) :
             DIRelayException(message = message, cause = cause)
 
         class UnknownException(cause: Throwable) :
@@ -165,6 +187,15 @@ interface SudoDIRelayClient {
      * Unsubscribe all subscribers from being notified about relay events.
      */
     suspend fun unsubscribeAll()
+
+    /**
+     * Gets the HTTP endpoint of a postbox with the given [connectionId]. This endpoint can
+     *  be used by peers to POST messages to.
+     *
+     * @param connectionId The postbox identifier to get the endpoint of.
+     * @return String URL of the HTTP address where peers can POST messages to the given postbox.
+     */
+    fun getPostboxEndpoint(connectionId: String): String
 }
 
 /**

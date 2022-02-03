@@ -12,6 +12,7 @@ import com.sudoplatform.sudodirelay.graphql.OnPostBoxDeletedSubscription
 import com.sudoplatform.sudodirelay.graphql.type.Direction
 import com.sudoplatform.sudodirelay.types.PostboxDeletionResult
 import com.sudoplatform.sudodirelay.types.RelayMessage
+import java.util.Date
 
 /**
  * Transformer response for transforming the GraphQL data types to the entity type that is
@@ -35,7 +36,7 @@ internal object RelayMessageTransformer {
             connectionId = newMessage.connectionId(),
             cipherText = newMessage.cipherText(),
             direction = newMessage.direction().toEntityDirection(),
-            timestamp = newMessage.utcTimestamp().toDate()
+            timestamp = Date(newMessage.utcTimestamp().toLong())
         )
     }
 
@@ -53,7 +54,7 @@ internal object RelayMessageTransformer {
                 connectionId = rawMsg.connectionId(),
                 cipherText = rawMsg.cipherText(),
                 direction = rawMsg.direction().toEntityDirection(),
-                timestamp = rawMsg.utcTimestamp().toDate()
+                timestamp = Date(rawMsg.utcTimestamp().toLong())
             )
         }
     }

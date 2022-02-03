@@ -323,3 +323,169 @@
   license: The Apache Software License, Version 2.0
   licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
   url: https://developer.android.com/jetpack/androidx
+- artifact: androidx.localbroadcastmanager:localbroadcastmanager:+
+  name: Android Support Library Local Broadcast Manager
+  copyrightHolder: Google, Inc.
+  license: The Apache Software License, Version 2.0
+  licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
+  url: http://developer.android.com/tools/extras/support-library.html
+- artifact: org.bouncycastle:bctls-jdk15to18:+
+  name: Bouncy Castle JSSE provider and TLS/DTLS API
+  copyrightHolder: The JSR-330 Expert Group
+  license: Bouncy Castle Licence
+  licenseUrl: http://www.bouncycastle.org/licence.html
+  url: http://www.bouncycastle.org/java.html
+- artifact: com.amazonaws:aws-android-sdk-kms:+
+  name: AWS SDK for Android - AWS KMS
+  copyrightHolder: Amazon
+  license: Amazon Software License
+  url: http://aws.amazon.com/sdkforandroid
+- artifact: com.appmattus.certificatetransparency:certificatetransparency-android:+
+  name: com.appmattus.certificatetransparency:certificatetransparency-android
+  copyrightHolder: Appmattus Limited
+  license: The Apache Software License, Version 2.0
+  licenseUrl: https://www.apache.org/licenses/LICENSE-2.0.txt
+  url: https://github.com/appmattus/certificatetransparency
+- artifact: org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:+
+  name: kotlinx-serialization-core
+  copyrightHolder: JetBrains, Inc.
+  license: The Apache Software License, Version 2.0
+  licenseUrl: https://www.apache.org/licenses/LICENSE-2.0.txt
+  url: https://github.com/Kotlin/kotlinx.serialization
+- artifact: org.bouncycastle:bcprov-jdk15to18:+
+  name: Bouncy Castle Provider
+  copyrightHolder: The JSR-330 Expert Group
+  license: Bouncy Castle Licence
+  licenseUrl: http://www.bouncycastle.org/licence.html
+  url: http://www.bouncycastle.org/java.html
+- artifact: org.jetbrains.kotlin:kotlin-stdlib-jdk8:+
+  name: Kotlin Stdlib Jdk8
+  copyrightHolder: JetBrains, Inc.
+  license: The Apache License, Version 2.0
+  licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
+  url: https://kotlinlang.org/
+- artifact: com.amazonaws:aws-android-sdk-s3:+
+  name: AWS SDK for Android - Amazon S3
+  copyrightHolder: Amazon
+  license: Amazon Software License
+  url: http://aws.amazon.com/sdkforandroid
+- artifact: org.hamcrest:hamcrest-core:+
+  name: Hamcrest Core
+  copyrightHolder: hamcrest.org
+  license: BSD License
+  licenseUrl: https://opensource.org/licenses/BSD-3-Clause
+  url: http://hamcrest.org
+- artifact: com.jakewharton.timber:timber:+
+  name: Timber
+  copyrightHolder: Jake Wharton
+  license: The Apache Software License, Version 2.0
+  licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
+  url: https://github.com/JakeWharton/timber
+- artifact: junit:junit:+
+  name: JUnit
+  copyrightHolder: JUnit
+  license: Eclipse Public License 1.0
+  licenseUrl: http://www.eclipse.org/legal/epl-v10.html
+  url: http://junit.org
+- artifact: com.appmattus.certificatetransparency:certificatetransparency:+
+  name: com.appmattus.certificatetransparency:certificatetransparency
+  copyrightHolder: Appmattus Limited
+  license: The Apache Software License, Version 2.0
+  licenseUrl: https://www.apache.org/licenses/LICENSE-2.0.txt
+  url: https://github.com/appmattus/certificatetransparency
+- artifact: androidx.documentfile:documentfile:+
+  name: Android Support Library Document File
+  copyrightHolder: Google, Inc.
+  license: The Apache Software License, Version 2.0
+  licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
+  url: http://developer.android.com/tools/extras/support-library.html
+- artifact: org.bouncycastle:bcutil-jdk15to18:+
+  name: Bouncy Castle ASN.1 Extension and Utility APIs
+  copyrightHolder: The JSR-330 Expert Group
+  license: Bouncy Castle Licence
+  licenseUrl: http://www.bouncycastle.org/licence.html
+  url: http://www.bouncycastle.org/java.html
+- artifact: org.bouncycastle:bcpkix-jdk15to18:+
+  name: Bouncy Castle PKIX, CMS, EAC, TSP, PKCS, OCSP, CMP, and CRMF APIs
+  copyrightHolder: The JSR-330 Expert Group
+  license: Bouncy Castle Licence
+  licenseUrl: http://www.bouncycastle.org/licence.html
+  url: http://www.bouncycastle.org/java.html
+- artifact: com.madgag.spongycastle:bcpkix-jdk15on:+
+  name: Spongy Castle
+  copyrightHolder: The JSR-330 Expert Group
+  license: Bouncy Castle Licence
+  licenseUrl: http://www.bouncycastle.org/licence.html
+  url: http://rtyley.github.io/spongycastle/
+- artifact: com.madgag.spongycastle:core:+
+  name: Spongy Castle
+  copyrightHolder: The JSR-330 Expert Group
+  license: Bouncy Castle Licence
+  licenseUrl: http://www.bouncycastle.org/licence.html
+  url: http://rtyley.github.io/spongycastle/
+- artifact: androidx.legacy:legacy-support-core-utils:+
+  name: Android Support Library core utils
+  copyrightHolder: Google, Inc.
+  license: The Apache Software License, Version 2.0
+  licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
+  url: http://developer.android.com/tools/extras/support-library.html
+- artifact: androidx.swiperefreshlayout:swiperefreshlayout:+
+  name: Android Support Library Custom View
+  copyrightHolder: Google, Inc.
+  license: The Apache Software License, Version 2.0
+  licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
+  url: http://developer.android.com/tools/extras/support-library.html
+- artifact: com.amazonaws:aws-android-sdk-cognitoauth:+
+  name: AWS SDK for Android - Amazon Cognito Auth
+  copyrightHolder: Amazon
+  license: Apache License, Version 2.0
+  licenseUrl: http://aws.amazon.com/apache2.0
+  url: http://aws.amazon.com/sdkforandroid
+- artifact: org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:+
+  name: kotlinx-serialization-json
+  copyrightHolder: JetBrains, Inc.
+  license: The Apache Software License, Version 2.0
+  licenseUrl: https://www.apache.org/licenses/LICENSE-2.0.txt
+  url: https://github.com/Kotlin/kotlinx.serialization
+- artifact: androidx.browser:browser:+
+  name: Android Support Custom Tabs
+  copyrightHolder: Google, Inc.
+  license: The Apache Software License, Version 2.0
+  licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
+  url: http://developer.android.com/tools/extras/support-library.html
+- artifact: androidx.coordinatorlayout:coordinatorlayout:+
+  name: Android Support Library Coordinator Layout
+  copyrightHolder: Google, Inc.
+  license: The Apache Software License, Version 2.0
+  licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
+  url: http://developer.android.com/tools/extras/support-library.html
+- artifact: androidx.legacy:legacy-support-core-ui:+
+  name: Android Support Library core UI
+  copyrightHolder: Google, Inc.
+  license: The Apache Software License, Version 2.0
+  licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
+  url: http://developer.android.com/tools/extras/support-library.html
+- artifact: androidx.print:print:+
+  name: Android Support Library Print
+  copyrightHolder: Google, Inc.
+  license: The Apache Software License, Version 2.0
+  licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
+  url: http://developer.android.com/tools/extras/support-library.html
+- artifact: com.madgag.spongycastle:prov:+
+  name: Spongy Castle
+  copyrightHolder: The JSR-330 Expert Group
+  license: Bouncy Castle Licence
+  licenseUrl: http://www.bouncycastle.org/licence.html
+  url: http://rtyley.github.io/spongycastle/
+- artifact: androidx.asynclayoutinflater:asynclayoutinflater:+
+  name: Android Support Library Async Layout Inflater
+  copyrightHolder: Google, Inc.
+  license: The Apache Software License, Version 2.0
+  licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
+  url: http://developer.android.com/tools/extras/support-library.html
+- artifact: androidx.slidingpanelayout:slidingpanelayout:+
+  name: Android Support Library Sliding Pane Layout
+  copyrightHolder: Google, Inc.
+  license: The Apache Software License, Version 2.0
+  licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
+  url: http://developer.android.com/tools/extras/support-library.html

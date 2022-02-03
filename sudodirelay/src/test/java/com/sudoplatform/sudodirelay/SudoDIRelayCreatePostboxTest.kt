@@ -5,13 +5,10 @@ import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
 import com.apollographql.apollo.api.Error
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloHttpException
-import com.sudoplatform.sudodirelay.DefaultSudoDIRelayClient.Companion.SEND_INIT_DEFAULT_CIPHER_TEXT
-import com.sudoplatform.sudodirelay.DefaultSudoDIRelayClient.Companion.SEND_INIT_DEFAULT_MESSAGE_ID
 import com.sudoplatform.sudodirelay.graphql.CallbackHolder
 import com.sudoplatform.sudodirelay.graphql.SendInitMutation
-import com.sudoplatform.sudodirelay.graphql.type.Direction
-import com.sudoplatform.sudodirelay.graphql.type.WriteToRelayInput
-import com.sudoplatform.sudodirelay.types.transformers.toDate
+import com.sudoplatform.sudodirelay.graphql.type.IdAsInput
+import com.sudoplatform.sudouser.SudoUserClient
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
 import io.kotlintest.shouldThrow
@@ -30,7 +27,6 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoMoreInteractions
-import java.util.Date
 
 /**
  * Test the correct operation of [SudoDIRelayClient.createPostbox] using mocks and spies.
@@ -42,14 +38,7 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
     private val connectionID = "62b39ef6-510f-4150-83e7-3ab4e71bffd8"
 
     private val mutationInput by before {
-        WriteToRelayInput.builder()
-            .messageId("init")
-            .connectionId("cid")
-            .cipherText("init")
-            .direction(Direction.OUTBOUND)
-            .utcTimestamp("Mon, 21 Jun 2021 19:11:50 GMT")
-            .nextToken(null)
-            .build()
+        IdAsInput.builder().connectionId("cid").build()
     }
 
     private val mutationResult by before {
@@ -57,10 +46,7 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
             "typename",
             "mid",
             "cid",
-            "hello world",
-            Direction.OUTBOUND,
-            "Mon, 21 Jun 2021 19:11:50 GMT",
-            null
+            (1_624_302_710_000).toDouble()
         )
     }
 
@@ -82,10 +68,18 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
         }
     }
 
+    private val mockUserClient by before {
+        mock<SudoUserClient>().stub {
+            on { getSubject() } doReturn "subject"
+            on { getRefreshToken() } doReturn "refreshToken"
+        }
+    }
+
     private val client by before {
         DefaultSudoDIRelayClient(
             mockContext,
             mockAppSyncClient,
+            mockUserClient,
             mockLogger
         )
     }
@@ -120,13 +114,7 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
             val actualMutationInput = ArgumentCaptor.forClass(SendInitMutation::class.java)
             verify(mockAppSyncClient).mutate(actualMutationInput.capture())
             with(actualMutationInput.value.variables().input()) {
-                messageId() shouldBe SEND_INIT_DEFAULT_MESSAGE_ID
-                connectionID shouldBe connectionID
-                cipherText() shouldBe SEND_INIT_DEFAULT_CIPHER_TEXT
-                direction() shouldBe Direction.OUTBOUND
-                // check timestamp within 2 mins of accuracy
-                utcTimestamp().toDate().after(Date(Date().time - twoMinutesMs)) shouldBe true
-                nextToken() shouldBe null
+                connectionId() shouldBe connectionID
             }
         }
 
@@ -154,31 +142,6 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
         delay(100)
 
         mutationHolder.callback?.onResponse(mutationResponseInvalidInitError)
-
-        deferredResult.await()
-
-        verify(mockAppSyncClient).mutate(any<SendInitMutation>())
-    }
-
-    @Test
-    fun `createPostbox() should throw with null response data`() = runBlocking<Unit> {
-
-        val deferredResult = async(Dispatchers.IO) {
-            shouldThrow<SudoDIRelayClient.DIRelayException.InvalidPostboxException> {
-                client.createPostbox(connectionID)
-            }
-        }
-
-        val mutationNullResponse by before {
-            Response.builder<SendInitMutation.Data>(SendInitMutation(mutationInput))
-                .data(null)
-                .build()
-        }
-
-        deferredResult.start()
-        delay(100)
-
-        mutationHolder.callback?.onResponse(mutationNullResponse)
 
         deferredResult.await()
 

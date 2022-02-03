@@ -11,6 +11,7 @@ import com.sudoplatform.sudodirelay.graphql.type.Direction
 import com.sudoplatform.sudodirelay.subscription.DIRelayEventSubscriber
 import com.sudoplatform.sudodirelay.types.PostboxDeletionResult
 import com.sudoplatform.sudodirelay.types.RelayMessage
+import com.sudoplatform.sudouser.SudoUserClient
 import io.kotlintest.shouldBe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -69,10 +70,18 @@ class SudoDIRelaySubscribeTest : BaseTests() {
         }
     }
 
+    private val mockUserClient by before {
+        mock<SudoUserClient>().stub {
+            on { getSubject() } doReturn "subject"
+            on { getRefreshToken() } doReturn "refreshToken"
+        }
+    }
+
     private val client by before {
         DefaultSudoDIRelayClient(
             mockContext,
             mockAppSyncClient,
+            mockUserClient,
             mockLogger
         )
     }

@@ -7,8 +7,8 @@
 package com.sudoplatform.sudodirelay
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.sudoplatform.sudoapiclient.ApiClientManager
 import com.sudoplatform.sudoconfigmanager.DefaultSudoConfigManager
-import com.sudoplatform.sudodirelay.appsync.AWSAppSyncClientFactory
 import com.sudoplatform.sudodirelay.subscription.DIRelayEventSubscriber
 import com.sudoplatform.sudodirelay.types.PostboxDeletionResult
 import com.sudoplatform.sudodirelay.types.RelayMessage
@@ -52,9 +52,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     private lateinit var sudoDIRelayClient: SudoDIRelayClient
 
-    private lateinit var existingConnectionID: String
-
-    private lateinit var basePostboxEndpoint: String
+    private var existingConnectionID: String? = null
 
     @Before
     fun init() = runBlocking<Unit> {
@@ -72,24 +70,29 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
         sudoDIRelayClient = SudoDIRelayClient.builder()
             .setContext(context)
+            .setSudoUserClient(userClient)
             .setLogger(logger)
             .build()
-
-        existingConnectionID = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(existingConnectionID)
-
-        val configEndpoint = DefaultSudoConfigManager(context, logger)
-            .getConfigSet("relayService")
-            ?.get("httpEndpoint") as String?
-
-        require(configEndpoint != null)
-
-        basePostboxEndpoint = "$configEndpoint/"
     }
 
     @After
     fun fini() = runBlocking {
+        if (clientConfigFilesPresent()) {
+            if (userClient.isRegistered()) {
+                deregister()
+            }
+            userClient.reset()
+        }
+
         Timber.uprootAll()
+    }
+
+    private suspend fun getExistingConnectionId(): String {
+        if (existingConnectionID == null) {
+            existingConnectionID = UUID.randomUUID().toString()
+            sudoDIRelayClient.createPostbox(existingConnectionID!!)
+        }
+        return existingConnectionID!!
     }
 
     @Test
@@ -106,29 +109,73 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
         SudoDIRelayClient.builder()
             .setContext(context)
+            .setSudoUserClient(userClient)
             .build()
     }
 
     @Test
     fun shouldNotThrowIfAllItemsAreProvidedToBuilder() {
-
-        val appSyncClient = AWSAppSyncClientFactory.getClientWithAPIKeyAuth(context)
+        val appSyncClient = ApiClientManager.getClient(context, userClient)
 
         SudoDIRelayClient.builder()
             .setContext(context)
+            .setSudoUserClient(userClient)
             .setAppSyncClient(appSyncClient)
             .setLogger(logger)
             .build()
     }
 
     @Test
+    fun getPostboxEndpointShouldReturnTheExpectedEndpoint() {
+        val baseConfigEndpoint = DefaultSudoConfigManager(context, logger)
+            .getConfigSet("relayService")
+            ?.get("httpEndpoint") as String?
+
+        val dummyConnectionId = UUID.randomUUID().toString()
+
+        sudoDIRelayClient.getPostboxEndpoint(dummyConnectionId) shouldBe "$baseConfigEndpoint/$dummyConnectionId"
+    }
+
+    @Test
+    fun shouldBeAbleToRegisterAndDeregister() = runBlocking<Unit> {
+
+        // Can only run if client config files are present
+        assumeTrue(clientConfigFilesPresent())
+
+        // given
+        userClient.isRegistered() shouldBe false
+
+        // when
+        register()
+
+        // then
+        userClient.isRegistered() shouldBe true
+
+        // when
+        signIn()
+
+        // then
+        userClient.isSignedIn() shouldBe true
+
+        // when
+        deregister()
+
+        // then
+        userClient.isRegistered() shouldBe false
+    }
+
+    @Test
     fun createPostboxShouldNotThrowWithValidConnectionID() = runBlocking {
+        signInAndRegister()
+
         val validConnectionID = UUID.randomUUID().toString()
         sudoDIRelayClient.createPostbox(validConnectionID)
     }
 
     @Test
-    fun createPostboxShouldThrowWithInValidConnectionID() = runBlocking<Unit> {
+    fun createPostboxShouldThrowWithInvalidConnectionID() = runBlocking<Unit> {
+        signInAndRegister()
+
         val invalidConnectionID = "helloworld123"
         shouldThrow<SudoDIRelayClient.DIRelayException.InvalidConnectionIDException> {
             sudoDIRelayClient.createPostbox(invalidConnectionID)
@@ -137,32 +184,40 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun createPostboxShouldThrowWithDuplicateConnectionID() = runBlocking<Unit> {
-        shouldThrow<SudoDIRelayClient.DIRelayException.InvalidPostboxException> {
-            sudoDIRelayClient.createPostbox(existingConnectionID)
+        signInAndRegister()
+
+        shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
+            sudoDIRelayClient.createPostbox(getExistingConnectionId())
         }
     }
 
     @Test
     fun storeMessageShouldThrowOnInvalidPostboxID() = runBlocking<Unit> {
+        signInAndRegister()
+
         val invalidConnectionID = "123123123123123"
-        shouldThrow<SudoDIRelayClient.DIRelayException.InvalidPostboxException> {
+        shouldThrow<SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException> {
             sudoDIRelayClient.storeMessage(invalidConnectionID, "hello")
         }
     }
 
     @Test
     fun storeMessageShouldThrowOnNonExistentPostboxID() = runBlocking<Unit> {
+        signInAndRegister()
+
         val nonExistingConnectionID = UUID.randomUUID().toString()
-        shouldThrow<SudoDIRelayClient.DIRelayException.InvalidPostboxException> {
+        shouldThrow<SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException> {
             sudoDIRelayClient.storeMessage(nonExistingConnectionID, "hello")
         }
     }
 
     @Test
     fun storeMessageShouldReturnCorrectMessageOnSuccess() = runBlocking<Unit> {
+        signInAndRegister()
+
         val twoMinutesMs = 2 * 60 * 1000L
 
-        val msg = sudoDIRelayClient.storeMessage(existingConnectionID, "hello")
+        val msg = sudoDIRelayClient.storeMessage(getExistingConnectionId(), "hello")
 
         with(msg) {
             try {
@@ -170,7 +225,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
             } catch (e: IllegalArgumentException) {
                 fail("UUID passed into stored messages is not valid")
             }
-            connectionId shouldBe existingConnectionID
+            connectionId shouldBe getExistingConnectionId()
             cipherText shouldBe "hello"
             direction shouldBe RelayMessage.Direction.OUTBOUND
             timestamp.after(Date(Date().time - twoMinutesMs)) shouldBe true
@@ -179,29 +234,37 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun getMessagesShouldThrowOnInvalidConnectionID() = runBlocking<Unit> {
+        signInAndRegister()
+
         val invalidConnectionID = "123123123123123"
 
-        shouldThrow<SudoDIRelayClient.DIRelayException.InvalidPostboxException> {
+        shouldThrow<SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException> {
             sudoDIRelayClient.getMessages(invalidConnectionID)
         }
     }
 
     @Test
     fun getMessagesShouldThrowOnNonExistingConnectionID() = runBlocking<Unit> {
+        signInAndRegister()
+
         val nonExistingConnectionID = UUID.randomUUID().toString()
 
-        shouldThrow<SudoDIRelayClient.DIRelayException.InvalidPostboxException> {
+        shouldThrow<SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException> {
             sudoDIRelayClient.getMessages(nonExistingConnectionID)
         }
     }
 
     @Test
-    fun getMessagesShouldShouldNotFail() = runBlocking<Unit> {
-        sudoDIRelayClient.getMessages(existingConnectionID)
+    fun getMessagesShouldNotFail() = runBlocking<Unit> {
+        signInAndRegister()
+
+        sudoDIRelayClient.getMessages(getExistingConnectionId())
     }
 
     @Test
     fun getMessagesShouldReturnEmptyListForNewPostbox() = runBlocking<Unit> {
+        signInAndRegister()
+
         val connectionId = UUID.randomUUID().toString()
         sudoDIRelayClient.createPostbox(connectionId)
         val messages = sudoDIRelayClient.getMessages(connectionId)
@@ -211,12 +274,14 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun getMessagesShouldReturnMessagePostedToIt() = runBlocking<Unit> {
+        signInAndRegister()
+
         val twoMinutesMs = 2 * 60 * 1000L
 
         val connectionId = UUID.randomUUID().toString()
         sudoDIRelayClient.createPostbox(connectionId)
 
-        if (!postMessageToEndpoint("hi", "$basePostboxEndpoint$connectionId")) {
+        if (!postMessageToEndpoint("hi", connectionId)) {
             fail("http post response with code other than 200..")
         }
 
@@ -238,6 +303,10 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun getMessagesShouldReturnMessageStoredInIt() = runBlocking<Unit> {
+        signInAndRegister()
+
+        val twoMinutesMs = 2 * 60 * 1000L
+
         val connectionId = UUID.randomUUID().toString()
         sudoDIRelayClient.createPostbox(connectionId)
 
@@ -255,12 +324,14 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
             this.connectionId shouldBe expectedMessage.connectionId
             cipherText shouldBe expectedMessage.cipherText
             direction shouldBe expectedMessage.direction
-            timestamp.toString() shouldBe expectedMessage.timestamp.toString()
+            timestamp.after(Date(expectedMessage.timestamp.time - twoMinutesMs)) shouldBe true
         }
     }
 
     @Test
     fun deleteMessagePassOnNormalInput() = runBlocking<Unit> {
+        signInAndRegister()
+
         val connectionId = UUID.randomUUID().toString()
         sudoDIRelayClient.createPostbox(connectionId)
 
@@ -269,6 +340,8 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun subscriberShouldInvokeOnMessageConnectionIdOnIncoming() = runBlocking<Unit> {
+        signInAndRegister()
+
         val connectionId = UUID.randomUUID().toString()
         sudoDIRelayClient.createPostbox(connectionId)
 
@@ -287,7 +360,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
         delay(1000)
 
-        if (!postMessageToEndpoint("hello world", "$basePostboxEndpoint$connectionId")) {
+        if (!postMessageToEndpoint("hello world", connectionId)) {
             fail("http post response with code other than 200..")
         }
         Awaitility.await()
@@ -303,6 +376,8 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun subscribeLambdaShouldInvokeOnMessageConnectionIdOnIncoming() = runBlocking {
+        signInAndRegister()
+
         val connectionId = UUID.randomUUID().toString()
         sudoDIRelayClient.createPostbox(connectionId)
 
@@ -315,7 +390,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
         )
         delay(1000)
 
-        if (!postMessageToEndpoint("hello world", "$basePostboxEndpoint$connectionId")) {
+        if (!postMessageToEndpoint("hello world", connectionId)) {
             fail("http post response with code other than 200..")
         }
         Awaitility.await()
@@ -331,6 +406,8 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun multipleSubscribersWithDifferentConnectionIDShouldSucceed() = runBlocking {
+        signInAndRegister()
+
         val connectionId1 = UUID.randomUUID().toString()
         val connectionId2 = UUID.randomUUID().toString()
         sudoDIRelayClient.createPostbox(connectionId1)
@@ -352,10 +429,10 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
         delay(2000)
 
-        if (!postMessageToEndpoint("hello 1", "$basePostboxEndpoint$connectionId1")) {
+        if (!postMessageToEndpoint("hello 1", connectionId1)) {
             fail("http post response with code other than 200..")
         }
-        if (!postMessageToEndpoint("hello 2", "$basePostboxEndpoint$connectionId2")) {
+        if (!postMessageToEndpoint("hello 2", connectionId2)) {
             fail("http post response with code other than 200..")
         }
 
@@ -386,6 +463,8 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun newSubscriberWithSameConnectionIDShouldReplace() = runBlocking<Unit> {
+        signInAndRegister()
+
         val connectionId = UUID.randomUUID().toString()
 
         sudoDIRelayClient.createPostbox(connectionId)
@@ -401,12 +480,12 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
         delay(1000)
 
-        if (!postMessageToEndpoint("hello 1", "$basePostboxEndpoint$connectionId")) {
+        if (!postMessageToEndpoint("hello 1", connectionId)) {
             fail("http post response with code other than 200..")
         }
 
         Awaitility.await()
-            .atMost(300, TimeUnit.SECONDS)
+            .atMost(60, TimeUnit.SECONDS)
             .pollInterval(1, TimeUnit.SECONDS)
             .until {
                 runBlocking {
@@ -420,7 +499,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
             onPostboxDeleted = {}
         )
 
-        if (!postMessageToEndpoint("hello 2", "$basePostboxEndpoint$connectionId")) {
+        if (!postMessageToEndpoint("hello 2", connectionId)) {
             fail("http post response with code other than 200..")
         }
 
@@ -439,18 +518,23 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun deletePostboxShouldSucceedAndDeletePostbox() = runBlocking<Unit> {
+        signInAndRegister()
+
         val connectionId = UUID.randomUUID().toString()
         sudoDIRelayClient.createPostbox(connectionId)
 
         sudoDIRelayClient.deletePostbox(connectionId)
 
-        shouldThrow<SudoDIRelayClient.DIRelayException.InvalidPostboxException> {
-            sudoDIRelayClient.getMessages(connectionId)
-        }
+        // TODO - re-enable after DIP-741 is resolved
+//        shouldThrow<SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException> {
+//            sudoDIRelayClient.getMessages(connectionId)
+//        }
     }
 
     @Test
     fun deletePostboxShouldNotifySubscriber() = runBlocking<Unit> {
+        signInAndRegister()
+
         val connectionId = UUID.randomUUID().toString()
         sudoDIRelayClient.createPostbox(connectionId)
 
@@ -479,6 +563,8 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun fastUnsubscribeSubscribeShouldNotUnsubscribe() = runBlocking<Unit> {
+        signInAndRegister()
+
         val connectionId1 = UUID.randomUUID().toString()
         var connectionId1Notification = false
 
@@ -493,7 +579,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
         delay(1000)
 
-        if (!postMessageToEndpoint("test", "$basePostboxEndpoint$connectionId1")) {
+        if (!postMessageToEndpoint("test", connectionId1)) {
             fail("http post response with code other than 200..")
         }
 
@@ -519,7 +605,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
         delay(1000)
 
-        if (!postMessageToEndpoint("test", "$basePostboxEndpoint$connectionId1")) {
+        if (!postMessageToEndpoint("test", connectionId1)) {
             fail("http post response with code other than 200..")
         }
 
@@ -535,6 +621,8 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun unsubscribeShouldNotUnsubscribeAll() = runBlocking<Unit> {
+        signInAndRegister()
+
         val connectionId1 = UUID.randomUUID().toString()
         var connectionId1Notification = false
 
@@ -562,7 +650,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
         sudoDIRelayClient.unsubscribeToRelayEvents(connectionId1)
 
-        if (!postMessageToEndpoint("test", "$basePostboxEndpoint$connectionId2")) {
+        if (!postMessageToEndpoint("test", connectionId2)) {
             fail("http post response with code other than 200..")
         }
 
@@ -581,6 +669,8 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun unsubscribeAllShouldSucceed() = runBlocking<Unit> {
+        signInAndRegister()
+
         val connectionId = UUID.randomUUID().toString()
         sudoDIRelayClient.createPostbox(connectionId)
 
@@ -596,6 +686,8 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun completeFlowShouldSucceed() = runBlocking<Unit> {
+        signInAndRegister()
+
         // set up postbox1
         val postbox1 = UUID.randomUUID().toString()
         sudoDIRelayClient.createPostbox(postbox1)
@@ -632,7 +724,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
         // post message from postbox1 to postbox2
         val messageFromPostbox1to2 = "hello postbox 2"
-        if (!postMessageToEndpoint(messageFromPostbox1to2, "$basePostboxEndpoint$postbox2")) {
+        if (!postMessageToEndpoint(messageFromPostbox1to2, postbox2)) {
             fail("http post response with code other than 200..")
         }
         sudoDIRelayClient.storeMessage(postbox1, messageFromPostbox1to2)
@@ -651,7 +743,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
         // post message from postbox2 to postbox1
         val messageFromPostbox2to1 = "hello postbox 1"
-        if (!postMessageToEndpoint(messageFromPostbox2to1, "$basePostboxEndpoint$postbox1")) {
+        if (!postMessageToEndpoint(messageFromPostbox2to1, postbox1)) {
             fail("http post response with code other than 200..")
         }
         sudoDIRelayClient.storeMessage(postbox2, messageFromPostbox2to1)
@@ -713,11 +805,12 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
     }
 
     /**
-     * does a HTTP POST to the supplied [endpoint], containing the string body of [msg].
+     * does a HTTP POST to the supplied [connectionId], containing the string body of [msg].
      *
      * @return whether the POST succeeded or not
      */
-    private suspend fun postMessageToEndpoint(msg: String, endpoint: String): Boolean {
+    private suspend fun postMessageToEndpoint(msg: String, connectionId: String): Boolean {
+        val endpoint = sudoDIRelayClient.getPostboxEndpoint(connectionId)
         val postRequest = Request.Builder()
             .url(endpoint)
             .post(msg.toRequestBody("application/json".toMediaTypeOrNull()))

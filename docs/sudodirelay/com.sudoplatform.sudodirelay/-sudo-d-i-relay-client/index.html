@@ -2,33 +2,37 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>SudoDIRelayClient</title>
-<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script><script src="https://unpkg.com/kotlin-playground@1" data-selector="code.runnablesample"></script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" async="async"></script>  </head>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>    <script>const storage = localStorage.getItem("dokka-dark-mode")
+const savedDarkMode = storage ? JSON.parse(storage) : false
+if(savedDarkMode === true){
+    document.getElementsByTagName("html")[0].classList.add("theme-dark")
+}</script>
+<script src="https://unpkg.com/kotlin-playground@1"></script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><link href="../../../styles/prism.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script><script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>  </head>
   <body>
+    <div class="navigation-wrapper" id="navigation-wrapper">
+      <div id="leftToggler"><span class="icon-toggler"></span></div>
+      <div class="library-name"><a href="../../../index.html">sudodirelay</a></div>
+      <div></div>
+      <div class="pull-right d-flex"><button id="theme-toggle-button"><span id="theme-toggle"></span></button>
+        <div id="searchBar"></div>
+      </div>
+    </div>
     <div id="container">
-      <div id="leftColumn"><a href="../../../index.html">
-          <div id="logo"></div>
-        </a>
-        <div id="paneSearch"></div>
+      <div id="leftColumn">
         <div id="sideMenu"></div>
       </div>
       <div id="main">
-        <div id="leftToggler"><span class="icon-toggler"></span></div>
-<script type="text/javascript" src="../../../scripts/main.js"></script>        <div class="main-content" id="content" pageIds="sudodirelay::com.sudoplatform.sudodirelay/SudoDIRelayClient///PointingToDeclaration//902449407">
-          <div class="navigation-wrapper" id="navigation-wrapper">
-            <div class="breadcrumbs"><a href="../../../index.html">sudodirelay</a>/<a href="../index.html">com.sudoplatform.sudodirelay</a>/<a href="index.html">SudoDIRelayClient</a></div>
-            <div class="pull-right d-flex">
-              <div id="searchBar"></div>
-            </div>
-          </div>
+        <div class="main-content" id="content" pageIds="sudodirelay::com.sudoplatform.sudodirelay/SudoDIRelayClient///PointingToDeclaration//902449407">
+          <div class="breadcrumbs"><a href="../../../index.html">sudodirelay</a>/<a href="../index.html">com.sudoplatform.sudodirelay</a>/<a href="index.html">SudoDIRelayClient</a></div>
           <div class="cover ">
             <h1 class="cover"><span>Sudo</span><wbr></wbr><span>DIRelay</span><wbr></wbr><span><span>Client</span></span></h1>
-            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace">interface <a href="index.html">SudoDIRelayClient</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Interface encapsulating a library for interacting with the Sudo Platform Decentralized Identity Relay service.</p><h4 class="">Since</h4><p class="paragraph">2021-07-14</p></div></div>
+            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">SudoDIRelayClient</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Interface encapsulating a library for interacting with the Sudo Platform Decentralized Identity Relay service.</p><h4 class="">Since</h4><p class="paragraph">2021-07-14</p></div></div>
           </div>
           <div class="tabbedcontent">
             <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Types">Types</button><button class="section-tab" data-togglable="Functions">Functions</button><button class="section-tab" data-togglable="Extensions">Extensions</button><button class="section-tab" data-togglable="Samples">Samples</button></div>
             <div class="tabs-section-body">
               <h2 class="">Samples</h2>
-              <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Samples"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="sample-container"><code class="runnablesample monospace" theme="idea"><pre>import android.content.Context
+              <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Samples"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import android.content.Context
 import com.sudoplatform.sudodirelay.BaseTests
 import com.sudoplatform.sudodirelay.SudoDIRelayClient
 import com.sudoplatform.sudodirelay.subscription.DIRelayEventSubscriber
@@ -44,56 +48,50 @@ fun main() {
     .setContext(context)
     .build() 
    //sampleEnd
-}</pre></code></div></div></div>
+}</code></pre></div></div></div>
               <h2 class="">Types</h2>
               <div class="table" data-togglable="Types"><a data-name="-752130869%2FClasslikes%2F902449407" anchor-label="Builder" id="-752130869%2FClasslikes%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
                 <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="-builder/index.html"><span><span>Builder</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-752130869%2FClasslikes%2F902449407"></span>
+                    <div class=""><span class="inline-flex">
+                        <div><a href="-builder/index.html"><span><span>Builder</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-752130869%2FClasslikes%2F902449407"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace">class <a href="-builder/index.html">Builder</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-  </div>
-</div>
-</div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-builder/index.html">Builder</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 <a data-name="-443588294%2FClasslikes%2F902449407" anchor-label="Companion" id="-443588294%2FClasslikes%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
                 <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="-companion/index.html"><span><span>Companion</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-443588294%2FClasslikes%2F902449407"></span>
+                    <div class=""><span class="inline-flex">
+                        <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-443588294%2FClasslikes%2F902449407"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace">object <a href="-companion/index.html">Companion</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-  </div>
-</div>
-</div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 <a data-name="910872793%2FClasslikes%2F902449407" anchor-label="DIRelayException" id="910872793%2FClasslikes%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
                 <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="-d-i-relay-exception/index.html"><span>DIRelay</span><wbr></wbr><span><span>Exception</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="910872793%2FClasslikes%2F902449407"></span>
+                    <div class=""><span class="inline-flex">
+                        <div><a href="-d-i-relay-exception/index.html"><span>DIRelay</span><wbr></wbr><span><span>Exception</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="910872793%2FClasslikes%2F902449407"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace">sealed class <a href="-d-i-relay-exception/index.html">DIRelayException</a> : <a href="https://developer.android.com/reference/kotlin/java/lang/RuntimeException.html">RuntimeException</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-  </div>
-<div class="brief "><p class="paragraph">Defines the exceptions for the decentralized identity relay methods.</p></div></div>
-</div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-d-i-relay-exception/index.html">DIRelayException</a> : <a href="https://developer.android.com/reference/kotlin/java/lang/RuntimeException.html">RuntimeException</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Defines the exceptions for the decentralized identity relay methods.</p></div></div></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -102,119 +100,120 @@ fun main() {
               <div class="table" data-togglable="Functions"><a data-name="-1850716096%2FFunctions%2F902449407" anchor-label="createPostbox" id="-1850716096%2FFunctions%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
                 <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="create-postbox.html"><span>create</span><wbr></wbr><span><span>Postbox</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1850716096%2FFunctions%2F902449407"></span>
+                    <div class=""><span class="inline-flex">
+                        <div><a href="create-postbox.html"><span>create</span><wbr></wbr><span><span>Postbox</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1850716096%2FFunctions%2F902449407"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace">abstract suspend fun <a href="create-postbox.html">createPostbox</a>(connectionId: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-  </div>
-<div class="brief "><p class="paragraph">Initializes a relay postbox with the given <a href="create-postbox.html">connectionId</a>.</p></div></div>
-</div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="create-postbox.html"><span class="token function">createPostbox</span></a><span class="token punctuation">(</span>connectionId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">)</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Initializes a relay postbox with the given <a href="create-postbox.html">connectionId</a>.</p></div></div></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 <a data-name="1938537457%2FFunctions%2F902449407" anchor-label="deletePostbox" id="1938537457%2FFunctions%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
                 <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="delete-postbox.html"><span>delete</span><wbr></wbr><span><span>Postbox</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1938537457%2FFunctions%2F902449407"></span>
+                    <div class=""><span class="inline-flex">
+                        <div><a href="delete-postbox.html"><span>delete</span><wbr></wbr><span><span>Postbox</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1938537457%2FFunctions%2F902449407"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace">abstract suspend fun <a href="delete-postbox.html">deletePostbox</a>(connectionId: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-  </div>
-<div class="brief "><p class="paragraph">Begins an async task to delete the relay postbox with ID of <a href="delete-postbox.html">connectionId</a>. The subscriber of <a href="subscribe-to-relay-events.html">subscribeToRelayEvents</a> is notified when this task finishes.</p></div></div>
-</div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="delete-postbox.html"><span class="token function">deletePostbox</span></a><span class="token punctuation">(</span>connectionId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">)</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Begins an async task to delete the relay postbox with ID of <a href="delete-postbox.html">connectionId</a>. The subscriber of <a href="subscribe-to-relay-events.html">subscribeToRelayEvents</a> is notified when this task finishes.</p></div></div></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 <a data-name="1430496947%2FFunctions%2F902449407" anchor-label="getMessages" id="1430496947%2FFunctions%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
                 <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="get-messages.html"><span>get</span><wbr></wbr><span><span>Messages</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1430496947%2FFunctions%2F902449407"></span>
+                    <div class=""><span class="inline-flex">
+                        <div><a href="get-messages.html"><span>get</span><wbr></wbr><span><span>Messages</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1430496947%2FFunctions%2F902449407"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace">abstract suspend fun <a href="get-messages.html">getMessages</a>(connectionId: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html">List</a>&lt;<a href="../../com.sudoplatform.sudodirelay.types/-relay-message/index.html">RelayMessage</a>&gt;<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-  </div>
-<div class="brief "><p class="paragraph">Gets a list of all <a href="../../com.sudoplatform.sudodirelay.types/-relay-message/index.html">RelayMessage</a>s at the postbox with ID of <a href="get-messages.html">connectionId</a>.</p></div></div>
-</div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-messages.html"><span class="token function">getMessages</span></a><span class="token punctuation">(</span>connectionId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span class="token keyword"></span><a href="../../com.sudoplatform.sudodirelay.types/-relay-message/index.html">RelayMessage</a><span class="token operator">&gt;</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Gets a list of all <a href="../../com.sudoplatform.sudodirelay.types/-relay-message/index.html">RelayMessage</a>s at the postbox with ID of <a href="get-messages.html">connectionId</a>.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1453034937%2FFunctions%2F902449407" anchor-label="getPostboxEndpoint" id="-1453034937%2FFunctions%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex">
+                        <div><a href="get-postbox-endpoint.html"><span>get</span><wbr></wbr><span>Postbox</span><wbr></wbr><span><span>Endpoint</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1453034937%2FFunctions%2F902449407"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword"></span><span class="token keyword">fun </span><a href="get-postbox-endpoint.html"><span class="token function">getPostboxEndpoint</span></a><span class="token punctuation">(</span>connectionId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Gets the HTTP endpoint of a postbox with the given <a href="get-postbox-endpoint.html">connectionId</a>. This endpoint can be used by peers to POST messages to.</p></div></div></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 <a data-name="1854307240%2FFunctions%2F902449407" anchor-label="storeMessage" id="1854307240%2FFunctions%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
                 <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="store-message.html"><span>store</span><wbr></wbr><span><span>Message</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1854307240%2FFunctions%2F902449407"></span>
+                    <div class=""><span class="inline-flex">
+                        <div><a href="store-message.html"><span>store</span><wbr></wbr><span><span>Message</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1854307240%2FFunctions%2F902449407"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace">abstract suspend fun <a href="store-message.html">storeMessage</a>(connectionId: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>, cipherText: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>): <a href="../../com.sudoplatform.sudodirelay.types/-relay-message/index.html">RelayMessage</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-  </div>
-<div class="brief "><p class="paragraph">Stores a message with the text contents of <a href="store-message.html">cipherText</a> in the relay postbox with ID of <a href="store-message.html">connectionId</a>. The message stored in the postbox will have a timestamp of the current system time, a random v4 UUID string as messageID, and a direction of OUTBOUND.</p></div></div>
-</div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="store-message.html"><span class="token function">storeMessage</span></a><span class="token punctuation">(</span>connectionId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span>cipherText<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../com.sudoplatform.sudodirelay.types/-relay-message/index.html">RelayMessage</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Stores a message with the text contents of <a href="store-message.html">cipherText</a> in the relay postbox with ID of <a href="store-message.html">connectionId</a>. The message stored in the postbox will have a timestamp of the current system time, a random v4 UUID string as messageID, and a direction of OUTBOUND.</p></div></div></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 <a data-name="-1594024378%2FFunctions%2F902449407" anchor-label="subscribeToRelayEvents" id="-1594024378%2FFunctions%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
                 <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="subscribe-to-relay-events.html"><span>subscribe</span><wbr></wbr><span>To</span><wbr></wbr><span>Relay</span><wbr></wbr><span><span>Events</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1594024378%2FFunctions%2F902449407"></span>
+                    <div class=""><span class="inline-flex">
+                        <div><a href="subscribe-to-relay-events.html"><span>subscribe</span><wbr></wbr><span>To</span><wbr></wbr><span>Relay</span><wbr></wbr><span><span>Events</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1594024378%2FFunctions%2F902449407"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace">abstract suspend fun <a href="subscribe-to-relay-events.html">subscribeToRelayEvents</a>(connectionId: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>, subscriber: <a href="../../com.sudoplatform.sudodirelay.subscription/-d-i-relay-event-subscriber/index.html">DIRelayEventSubscriber</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-  </div>
-<div class="brief "><p class="paragraph">Subscribes to notifications: of incoming messages and when the postbox has finished being deleted.</p></div></div>
-</div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="subscribe-to-relay-events.html"><span class="token function">subscribeToRelayEvents</span></a><span class="token punctuation">(</span>connectionId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span>subscriber<span class="token operator">: </span><a href="../../com.sudoplatform.sudodirelay.subscription/-d-i-relay-event-subscriber/index.html">DIRelayEventSubscriber</a><span class="token punctuation">)</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Subscribes to notifications: of incoming messages and when the postbox has finished being deleted.</p></div></div></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 <a data-name="1948623415%2FFunctions%2F902449407" anchor-label="unsubscribeAll" id="1948623415%2FFunctions%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
                 <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="unsubscribe-all.html"><span>unsubscribe</span><wbr></wbr><span><span>All</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1948623415%2FFunctions%2F902449407"></span>
+                    <div class=""><span class="inline-flex">
+                        <div><a href="unsubscribe-all.html"><span>unsubscribe</span><wbr></wbr><span><span>All</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1948623415%2FFunctions%2F902449407"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace">abstract suspend fun <a href="unsubscribe-all.html">unsubscribeAll</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-  </div>
-<div class="brief "><p class="paragraph">Unsubscribe all subscribers from being notified about relay events.</p></div></div>
-</div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="unsubscribe-all.html"><span class="token function">unsubscribeAll</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Unsubscribe all subscribers from being notified about relay events.</p></div></div></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 <a data-name="1578153819%2FFunctions%2F902449407" anchor-label="unsubscribeToRelayEvents" id="1578153819%2FFunctions%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
                 <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="unsubscribe-to-relay-events.html"><span>unsubscribe</span><wbr></wbr><span>To</span><wbr></wbr><span>Relay</span><wbr></wbr><span><span>Events</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1578153819%2FFunctions%2F902449407"></span>
+                    <div class=""><span class="inline-flex">
+                        <div><a href="unsubscribe-to-relay-events.html"><span>unsubscribe</span><wbr></wbr><span>To</span><wbr></wbr><span>Relay</span><wbr></wbr><span><span>Events</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1578153819%2FFunctions%2F902449407"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace">abstract suspend fun <a href="unsubscribe-to-relay-events.html">unsubscribeToRelayEvents</a>(connectionId: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-  </div>
-<div class="brief "><p class="paragraph">Unsubscribe from relay events for the postbox with ID <a href="unsubscribe-to-relay-events.html">connectionId</a> so that the subscriber is no longer notified about incoming messages or postbox deletion events.</p></div></div>
-</div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="unsubscribe-to-relay-events.html"><span class="token function">unsubscribeToRelayEvents</span></a><span class="token punctuation">(</span>connectionId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">)</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Unsubscribe from relay events for the postbox with ID <a href="unsubscribe-to-relay-events.html">connectionId</a> so that the subscriber is no longer notified about incoming messages or postbox deletion events.</p></div></div></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -223,17 +222,15 @@ fun main() {
               <div class="table" data-togglable="Extensions"><a data-name="-1509988914%2FExtensions%2F902449407" anchor-label="subscribeToRelayEvents" id="-1509988914%2FExtensions%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
                 <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex"><a href="../subscribe-to-relay-events.html"><span>subscribe</span><wbr></wbr><span>To</span><wbr></wbr><span>Relay</span><wbr></wbr><span><span>Events</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1509988914%2FExtensions%2F902449407"></span>
+                    <div class=""><span class="inline-flex">
+                        <div><a href="../subscribe-to-relay-events.html"><span>subscribe</span><wbr></wbr><span>To</span><wbr></wbr><span>Relay</span><wbr></wbr><span><span>Events</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1509988914%2FExtensions%2F902449407"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
-                      <div class="title"><div class="divergent-group" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
-
-  <div>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace">suspend fun <a href="index.html">SudoDIRelayClient</a>.<a href="../subscribe-to-relay-events.html">subscribeToRelayEvents</a>(connectionId: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a>, onConnectionChange: (status: <a href="../../com.sudoplatform.sudodirelay.subscription/-d-i-relay-event-subscriber/-connection-state/index.html">DIRelayEventSubscriber.ConnectionState</a>) -&gt; <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html">Unit</a> = {}, onMessageIncoming: (relayMessage: <a href="../../com.sudoplatform.sudodirelay.types/-relay-message/index.html">RelayMessage</a>) -&gt; <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html">Unit</a>, onPostboxDeleted: (postBoxUpdate: <a href="../../com.sudoplatform.sudodirelay.types/-postbox-deletion-result/index.html">PostboxDeletionResult</a>) -&gt; <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html">Unit</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
-  </div>
-<div class="brief "><p class="paragraph">Subscribes to be notified of incoming messages, and/or if the postbox has finished deleting, at the postbox with ID of <a href="../subscribe-to-relay-events.html">connectionId</a>.</p></div></div>
-</div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">SudoDIRelayClient</a><span class="token punctuation">.</span><a href="../subscribe-to-relay-events.html"><span class="token function">subscribeToRelayEvents</span></a><span class="token punctuation">(</span>connectionId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span>onConnectionChange<span class="token operator">: </span><span class="token punctuation">(</span><span class="token keyword"></span>status<span class="token operator">: </span><a href="../../com.sudoplatform.sudodirelay.subscription/-d-i-relay-event-subscriber/-connection-state/index.html">DIRelayEventSubscriber.ConnectionState</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><span class="token keyword"></span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html">Unit</a><span class="token operator"> = </span>{}<span class="token punctuation">, </span>onMessageIncoming<span class="token operator">: </span><span class="token punctuation">(</span><span class="token keyword"></span>relayMessage<span class="token operator">: </span><a href="../../com.sudoplatform.sudodirelay.types/-relay-message/index.html">RelayMessage</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><span class="token keyword"></span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html">Unit</a><span class="token punctuation">, </span>onPostboxDeleted<span class="token operator">: </span><span class="token punctuation">(</span><span class="token keyword"></span>postBoxUpdate<span class="token operator">: </span><a href="../../com.sudoplatform.sudodirelay.types/-postbox-deletion-result/index.html">PostboxDeletionResult</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><span class="token keyword"></span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html">Unit</a><span class="token punctuation">)</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Subscribes to be notified of incoming messages, and/or if the postbox has finished deleting, at the postbox with ID of <a href="../subscribe-to-relay-events.html">connectionId</a>.</p></div></div></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -241,7 +238,7 @@ fun main() {
             </div>
           </div>
         </div>
-        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2021 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+        <div class="footer"><span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2022 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
       </div>
     </div>
   </body>

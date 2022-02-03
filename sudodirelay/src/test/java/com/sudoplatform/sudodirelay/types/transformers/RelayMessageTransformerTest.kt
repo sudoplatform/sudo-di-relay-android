@@ -27,8 +27,7 @@ class RelayMessageTransformerTest {
             "cid1",
             "hello world",
             Direction.INBOUND,
-            "Mon, Jun 21 2021 19:11:50 GMT",
-            null
+            (1_624_302_710_000).toDouble()
         )
         val exceptedOutput = RelayMessage(
             "mid1",
@@ -54,8 +53,7 @@ class RelayMessageTransformerTest {
             "con1",
             "hello",
             Direction.INBOUND,
-            "Tue, May 18 2021 01:23:20 GMT",
-            null
+            1642255117000.toDouble()
         )
         val msg2 = GetMessagesQuery.GetMessage(
             "",
@@ -63,8 +61,7 @@ class RelayMessageTransformerTest {
             "con1",
             "bye",
             Direction.OUTBOUND,
-            "Wed, May 19 2021 05:10:00 GMT",
-            null
+            1642253117000.toDouble()
         )
         val getMsgs = listOf(msg1, msg2)
         val expectedOutput = listOf(
@@ -73,14 +70,14 @@ class RelayMessageTransformerTest {
                 "con1",
                 "hello",
                 RelayMessage.Direction.INBOUND,
-                Date(1621301000000)
+                Date(1642255117000)
             ),
             RelayMessage(
                 "msg2",
                 "con1",
                 "bye",
                 RelayMessage.Direction.OUTBOUND,
-                Date(1621401000000)
+                Date(1642253117000)
             )
         )
 

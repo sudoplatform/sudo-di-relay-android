@@ -1,10 +1,11 @@
 # this is an auto generated file. This will be overwritten
-query GetPublicKeyForRelay($keyId: String!) {
-  getPublicKeyForRelay(keyId: $keyId) {
+query GetPublicKeyForRelay($keyId: String!, $keyFormats: [KeyFormat!]) {
+  getPublicKeyForRelay(keyId: $keyId, keyFormats: $keyFormats) {
     id
     keyId
     keyRingId
     algorithm
+    keyFormat
     publicKey
     owner
     version
@@ -12,13 +13,22 @@ query GetPublicKeyForRelay($keyId: String!) {
     updatedAtEpochMs
   }
 }
-query GetPublicKeysForRelay($limit: Int, $nextToken: String) {
-  getPublicKeysForRelay(limit: $limit, nextToken: $nextToken) {
+query GetPublicKeysForRelay(
+  $limit: Int
+  $nextToken: String
+  $keyFormats: [KeyFormat!]
+) {
+  getPublicKeysForRelay(
+    limit: $limit
+    nextToken: $nextToken
+    keyFormats: $keyFormats
+  ) {
     items {
       id
       keyId
       keyRingId
       algorithm
+      keyFormat
       publicKey
       owner
       version
@@ -28,17 +38,24 @@ query GetPublicKeysForRelay($limit: Int, $nextToken: String) {
     nextToken
   }
 }
-query GetKeyRingForRelay($keyRingId: String!, $limit: Int, $nextToken: String) {
+query GetKeyRingForRelay(
+  $keyRingId: String!
+  $limit: Int
+  $nextToken: String
+  $keyFormats: [KeyFormat!]
+) {
   getKeyRingForRelay(
     keyRingId: $keyRingId
     limit: $limit
     nextToken: $nextToken
+    keyFormats: $keyFormats
   ) {
     items {
       id
       keyId
       keyRingId
       algorithm
+      keyFormat
       publicKey
       owner
       version
@@ -55,7 +72,6 @@ query GetMessages($input: IdAsInput!) {
     cipherText
     direction
     utcTimestamp
-    nextToken
   }
 }
 mutation CreatePublicKeyForRelay($input: CreatePublicKeyInput!) {
@@ -64,6 +80,7 @@ mutation CreatePublicKeyForRelay($input: CreatePublicKeyInput!) {
     keyId
     keyRingId
     algorithm
+    keyFormat
     publicKey
     owner
     version
@@ -77,6 +94,7 @@ mutation DeletePublicKeyForRelay($input: DeletePublicKeyInput) {
     keyId
     keyRingId
     algorithm
+    keyFormat
     publicKey
     owner
     version
@@ -84,14 +102,11 @@ mutation DeletePublicKeyForRelay($input: DeletePublicKeyInput) {
     updatedAtEpochMs
   }
 }
-mutation SendInit($input: WriteToRelayInput!) {
+mutation SendInit($input: IdAsInput!) {
   sendInit(input: $input) {
-    messageId
     connectionId
-    cipherText
-    direction
+    owner
     utcTimestamp
-    nextToken
   }
 }
 mutation StoreMessage($input: WriteToRelayInput!) {
@@ -101,7 +116,6 @@ mutation StoreMessage($input: WriteToRelayInput!) {
     cipherText
     direction
     utcTimestamp
-    nextToken
   }
 }
 mutation DeletePostBox($input: IdAsInput!) {
@@ -125,8 +139,10 @@ mutation InternalFireOnMessageReceived($input: WriteToRelayInput) {
     cipherText
     direction
     utcTimestamp
-    nextToken
   }
+}
+subscription Ping {
+  ping
 }
 subscription OnMessageCreated($connectionId: ID!, $direction: Direction!) {
   onMessageCreated(connectionId: $connectionId, direction: $direction) {
@@ -135,7 +151,6 @@ subscription OnMessageCreated($connectionId: ID!, $direction: Direction!) {
     cipherText
     direction
     utcTimestamp
-    nextToken
   }
 }
 subscription OnPostBoxDeleted($connectionId: ID!) {
