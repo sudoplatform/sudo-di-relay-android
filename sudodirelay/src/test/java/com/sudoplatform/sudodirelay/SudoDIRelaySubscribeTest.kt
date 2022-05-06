@@ -32,8 +32,6 @@ import org.mockito.kotlin.verifyNoMoreInteractions
 
 /**
  * Test the correct operation of [SudoDIRelayClient.subscribeToRelayEvents] using mocks and spies.
- *
- * @since 2021-07-02
  */
 class SudoDIRelaySubscribeTest : BaseTests() {
 

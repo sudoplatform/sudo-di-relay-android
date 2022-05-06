@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Anonyome Labs, Inc. All rights reserved.
+ * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,6 +12,7 @@ import com.sudoplatform.sudoapiclient.ApiClientManager
 import com.sudoplatform.sudoconfigmanager.DefaultSudoConfigManager
 import com.sudoplatform.sudodirelay.logging.LogConstants
 import com.sudoplatform.sudodirelay.subscription.DIRelayEventSubscriber
+import com.sudoplatform.sudodirelay.types.Postbox
 import com.sudoplatform.sudodirelay.types.PostboxDeletionResult
 import com.sudoplatform.sudodirelay.types.RelayMessage
 import com.sudoplatform.sudologging.AndroidUtilsLogDriver
@@ -23,7 +24,6 @@ import java.util.Objects
 /**
  * Interface encapsulating a library for interacting with the Sudo Platform Decentralized Identity Relay service.
  * @sample com.sudoplatform.sudodirelay.samples.Samples.sudoDIRelayClient
- * @since 2021-07-14
  */
 interface SudoDIRelayClient {
 
@@ -105,8 +105,8 @@ interface SudoDIRelayClient {
     /**
      * Defines the exceptions for the decentralized identity relay methods.
      *
-     * @property message Accompanying message for the exception.
-     * @property cause The cause for the exception.
+     * @property message [String] Accompanying message for the exception.
+     * @property cause [Throwable] The cause for the exception.
      */
     sealed class DIRelayException(
         message: String? = null,
@@ -116,6 +116,9 @@ interface SudoDIRelayClient {
             DIRelayException(message = message, cause = cause)
 
         class InvalidConnectionIDException(message: String? = null, cause: Throwable? = null) :
+            DIRelayException(message = message, cause = cause)
+
+        class InvalidTokenException(message: String? = null, cause: Throwable? = null) :
             DIRelayException(message = message, cause = cause)
 
         class UnauthorizedPostboxException(message: String? = null, cause: Throwable? = null) :
@@ -128,18 +131,20 @@ interface SudoDIRelayClient {
     /**
      * Initializes a relay postbox with the given [connectionId].
      *
-     * @param connectionId A valid v4 UUID String to identify the postbox.
+     * @param connectionId [String] A valid v4 UUID String to identify the postbox.
+     * @param ownershipProofToken [String] Proof of sudo ownership for creating postboxes. The ownership
+     *  proof must contain an audience of "sudoplatform.relay.postbox".
      */
     @Throws(DIRelayException::class)
-    suspend fun createPostbox(connectionId: String)
+    suspend fun createPostbox(connectionId: String, ownershipProofToken: String)
 
     /**
      * Stores a message with the text contents of [cipherText] in the relay postbox with ID of [connectionId].
      * The message stored in the postbox will have a timestamp of the current system time, a random
      *  v4 UUID string as messageID, and a direction of OUTBOUND.
      *
-     * @param connectionId the postbox identifier to store a message in.
-     * @param cipherText the string of text to store.
+     * @param connectionId [String] the postbox identifier to store a message in.
+     * @param cipherText [String] the string of text to store.
      * @return the [RelayMessage] that was stored in the postbox.
      */
     @Throws(DIRelayException::class)
@@ -149,7 +154,7 @@ interface SudoDIRelayClient {
      * Begins an async task to delete the relay postbox with ID of [connectionId].
      *  The [subscriber] of [subscribeToRelayEvents] is notified when this task finishes.
      *
-     * @param connectionId the postbox identifier to be deleted.
+     * @param connectionId [String] the postbox identifier to be deleted.
      */
     @Throws(DIRelayException::class)
     suspend fun deletePostbox(connectionId: String)
@@ -157,17 +162,18 @@ interface SudoDIRelayClient {
     /**
      * Gets a list of all [RelayMessage]s at the postbox with ID of [connectionId].
      *
-     * @param connectionId the postbox identifier to get messages from.
-     * @return list of [RelayMessage]s at the given postbox, or empty list of nothing found.
+     * @param connectionId [String] the postbox identifier to get messages from.
+     * @return [List<RelayMessages>] list of [RelayMessage]s at the given postbox, or empty list
+     *  if nothing found.
      */
     @Throws(DIRelayException::class)
-    suspend fun getMessages(connectionId: String): List<RelayMessage>
+    suspend fun listMessages(connectionId: String): List<RelayMessage>
 
     /**
      * Subscribes to notifications: of incoming messages and when the postbox has finished
      *  being deleted.
      *
-     * @param connectionId The postbox identifier to subscribe to events for.
+     * @param connectionId [String] The postbox identifier to subscribe to events for.
      * @param subscriber The [DIRelayEventSubscriber] to notify.
      */
     suspend fun subscribeToRelayEvents(
@@ -179,7 +185,7 @@ interface SudoDIRelayClient {
      * Unsubscribe from relay events for the postbox with ID [connectionId] so that the subscriber
      *  is no longer notified about incoming messages or postbox deletion events.
      *
-     * @param connectionId The postbox identifier to unsubscribe to events from.
+     * @param connectionId [String] The postbox identifier to unsubscribe to events from.
      */
     suspend fun unsubscribeToRelayEvents(connectionId: String)
 
@@ -192,10 +198,19 @@ interface SudoDIRelayClient {
      * Gets the HTTP endpoint of a postbox with the given [connectionId]. This endpoint can
      *  be used by peers to POST messages to.
      *
-     * @param connectionId The postbox identifier to get the endpoint of.
+     * @param connectionId [String] The postbox identifier to get the endpoint of.
      * @return String URL of the HTTP address where peers can POST messages to the given postbox.
      */
     fun getPostboxEndpoint(connectionId: String): String
+
+    /**
+     * Gets a list of postboxes that are associated with the given [sudoId].
+     *
+     * @param sudoId [String] the [Sudo]'s identifier.
+     * @return [List<Postbox>] a list of [Postbox]s owned by the [sudoId], or empty if an invalid
+     *  [sudoId] is provided.
+     */
+    suspend fun listPostboxesForSudoId(sudoId: String): List<Postbox>
 }
 
 /**

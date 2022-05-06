@@ -1,15 +1,18 @@
+/*
+ * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.sudoplatform.sudodirelay
 
 import android.content.Context
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloHttpException
-import com.sudoplatform.sudodirelay.CommonData.forbiddenHTTPResponse
 import com.sudoplatform.sudodirelay.graphql.CallbackHolder
-import com.sudoplatform.sudodirelay.graphql.GetMessagesQuery
-import com.sudoplatform.sudodirelay.graphql.type.Direction
-import com.sudoplatform.sudodirelay.graphql.type.IdAsInput
-import com.sudoplatform.sudodirelay.types.RelayMessage
+import com.sudoplatform.sudodirelay.graphql.ListPostboxesForSudoIdQuery
+import com.sudoplatform.sudodirelay.graphql.type.ListPostboxesForSudoIdInput
 import com.sudoplatform.sudouser.SudoUserClient
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
@@ -28,72 +31,63 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoMoreInteractions
-import java.util.Date
 
 /**
- * Test the correct operation of [SudoDIRelayClient.getMessages] using mocks and spies.
- *
- * @since 2021-07-02
+ * Test the correct operation of [SudoDIRelayClient.listPostboxesForSudoId] using mocks and spies.
  */
-class SudoDIRelayGetMessagesTest : BaseTests() {
+class SudoDIRelayListPostboxesForSudoIdTest : BaseTests() {
 
     private val queryInput by before {
-        IdAsInput.builder()
-            .connectionId("null")
+        ListPostboxesForSudoIdInput.builder()
+            .sudoId("sudo1")
             .build()
     }
 
     private val queryResult by before {
         listOf(
-            GetMessagesQuery.GetMessage(
+            ListPostboxesForSudoIdQuery.ListPostboxesForSudoId(
                 "",
-                "mid",
-                "cid",
-                "hello",
-                Direction.INBOUND,
-                (1_624_302_710_000).toDouble()
+                "0-0-0-1",
+                "sudo1",
+                "user1",
+                (1_651_030_295_659).toDouble()
             )
         )
     }
 
     private val queryResultMultiple by before {
         listOf(
-            GetMessagesQuery.GetMessage(
+            ListPostboxesForSudoIdQuery.ListPostboxesForSudoId(
                 "",
-                "001",
-                "123",
-                "hi",
-                Direction.INBOUND,
+                "0-0-0-1",
+                "sudo1",
+                "user1",
                 (1_623_302_710_000).toDouble()
             ),
-            GetMessagesQuery.GetMessage(
+            ListPostboxesForSudoIdQuery.ListPostboxesForSudoId(
                 "",
-                "002",
-                "123",
-                "bye",
-                Direction.OUTBOUND,
+                "0-0-0-2",
+                "sudo1",
+                "user1",
                 (1_622_342_710_000).toDouble()
             ),
-            GetMessagesQuery.GetMessage(
+            ListPostboxesForSudoIdQuery.ListPostboxesForSudoId(
                 "",
-                "003",
-                "123",
-                "hello world",
-                Direction.INBOUND,
+                "0-0-0-3",
+                "sudo1",
+                "user1",
                 (1_624_902_710_000).toDouble()
             )
         )
     }
 
-    private val queryResultTimestampDate = Date(1624302710000)
-
     private val queryResponse by before {
-        Response.builder<GetMessagesQuery.Data>(GetMessagesQuery(queryInput))
-            .data(GetMessagesQuery.Data(queryResult))
+        Response.builder<ListPostboxesForSudoIdQuery.Data>(ListPostboxesForSudoIdQuery(queryInput))
+            .data(ListPostboxesForSudoIdQuery.Data(queryResult))
             .build()
     }
 
-    private val queryHolder = CallbackHolder<GetMessagesQuery.Data>()
+    private val queryHolder = CallbackHolder<ListPostboxesForSudoIdQuery.Data>()
 
     private val mockContext by before {
         mock<Context>()
@@ -101,7 +95,7 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
 
     private val mockAppSyncClient by before {
         mock<AWSAppSyncClient>().stub {
-            on { query(any<GetMessagesQuery>()) } doReturn queryHolder.queryOperation
+            on { query(any<ListPostboxesForSudoIdQuery>()) } doReturn queryHolder.queryOperation
         }
     }
 
@@ -131,12 +125,12 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
     }
 
     @Test
-    fun `getMessages(connectionID) should pass connectionID into the query`() = runBlocking<Unit> {
+    fun `listPostboxesForSudoId() should pass sudoId into the query`() = runBlocking<Unit> {
         queryHolder.callback shouldBe null
 
-        val connectionId = "1234-1234-1234-1234"
+        val sudoId = "sudo1"
         val deferredResult = async(Dispatchers.IO) {
-            client.getMessages(connectionId)
+            client.listPostboxesForSudoId(sudoId)
         }
 
         deferredResult.start()
@@ -145,56 +139,60 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
         queryHolder.callback?.onResponse(queryResponse)
         deferredResult.await()
 
-        val actualQueryInput = ArgumentCaptor.forClass(GetMessagesQuery::class.java)
+        val actualQueryInput = ArgumentCaptor.forClass(ListPostboxesForSudoIdQuery::class.java)
         verify(mockAppSyncClient).query(actualQueryInput.capture())
 
-        // verify input connectionID not changed
-        actualQueryInput.value.variables().input().connectionId() shouldBe connectionId
+        // verify input sudoId not changed
+        actualQueryInput.value.variables().input()?.sudoId() shouldBe sudoId
     }
 
     @Test
-    fun `getMessages() should return results when no errors`() = runBlocking<Unit> {
+    fun `listPostboxesForSudoId() should return empty list for null result`() = runBlocking<Unit> {
         queryHolder.callback shouldBe null
 
+        val nullResponse by before {
+            Response.builder<ListPostboxesForSudoIdQuery.Data>(
+                ListPostboxesForSudoIdQuery(
+                    queryInput
+                )
+            )
+                .data(null)
+                .build()
+        }
+
+        val sudoId = "sudo1"
         val deferredResult = async(Dispatchers.IO) {
-            client.getMessages("cid")
+            client.listPostboxesForSudoId(sudoId)
         }
 
         deferredResult.start()
-
         delay(100)
         queryHolder.callback shouldNotBe null
-        queryHolder.callback?.onResponse(queryResponse)
-
+        queryHolder.callback?.onResponse(nullResponse)
         val result = deferredResult.await()
 
-        result shouldNotBe null
-        result.size shouldBe 1
+        result shouldBe emptyList()
 
-        with(result[0]) {
-            messageId shouldBe "mid"
-            connectionId shouldBe "cid"
-            cipherText shouldBe "hello"
-            direction shouldBe RelayMessage.Direction.INBOUND
-            timestamp shouldBe queryResultTimestampDate
-        }
-
-        verify(mockAppSyncClient).query(any<GetMessagesQuery>())
+        verify(mockAppSyncClient).query(any<ListPostboxesForSudoIdQuery>())
     }
 
     @Test
-    fun `getMessages() should return list in order of date`() =
+    fun `listPostboxesForSudoId() should return results list in order of date`() =
         runBlocking<Unit> {
             queryHolder.callback shouldBe null
 
             val responseWithMultiple by before {
-                Response.builder<GetMessagesQuery.Data>(GetMessagesQuery(queryInput))
-                    .data(GetMessagesQuery.Data(queryResultMultiple))
+                Response.builder<ListPostboxesForSudoIdQuery.Data>(
+                    ListPostboxesForSudoIdQuery(
+                        queryInput
+                    )
+                )
+                    .data(ListPostboxesForSudoIdQuery.Data(queryResultMultiple))
                     .build()
             }
 
             val deferredResult = async(Dispatchers.IO) {
-                client.getMessages("123")
+                client.listPostboxesForSudoId("123")
             }
 
             deferredResult.start()
@@ -208,20 +206,20 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
             result shouldNotBe null
             result.size shouldBe 3
 
-            result[0].messageId shouldBe "002"
-            result[1].messageId shouldBe "001"
-            result[2].messageId shouldBe "003"
+            result[0].connectionId shouldBe "0-0-0-2"
+            result[1].connectionId shouldBe "0-0-0-1"
+            result[2].connectionId shouldBe "0-0-0-3"
 
-            verify(mockAppSyncClient).query(any<GetMessagesQuery>())
+            verify(mockAppSyncClient).query(any<ListPostboxesForSudoIdQuery>())
         }
 
     @Test
-    fun `getMessages() should throw when http error occurs`() = runBlocking<Unit> {
+    fun `listPostboxesForSudoId() should throw when http error occurs`() = runBlocking<Unit> {
         queryHolder.callback shouldBe null
 
         val deferredResult = async(Dispatchers.IO) {
             shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
-                client.getMessages("cid")
+                client.listPostboxesForSudoId("sudo")
             }
         }
 
@@ -229,10 +227,10 @@ class SudoDIRelayGetMessagesTest : BaseTests() {
         delay(100)
 
         queryHolder.callback shouldNotBe null
-        queryHolder.callback?.onHttpError(ApolloHttpException(forbiddenHTTPResponse))
+        queryHolder.callback?.onHttpError(ApolloHttpException(CommonData.forbiddenHTTPResponse))
 
         deferredResult.await()
 
-        verify(mockAppSyncClient).query(any<GetMessagesQuery>())
+        verify(mockAppSyncClient).query(any<ListPostboxesForSudoIdQuery>())
     }
 }

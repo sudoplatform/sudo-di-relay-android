@@ -30,8 +30,6 @@ import kotlin.RuntimeException
 
 /**
  * Test the correct operation of [SudoDIRelayClient.deletePostbox] using mocks and spies.
- *
- * @since 2021-07-02
  */
 class SudoDIRelayDeletePostboxTest : BaseTests() {
     private val mutationInput by before {

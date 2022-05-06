@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Anonyome Labs, Inc. All rights reserved.
+ * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -20,8 +20,6 @@ import org.robolectric.RobolectricTestRunner
 /**
  * These are sample snippets of code that are included in the generated documentation. They are
  * placed here in the test code so that at least we know they will compile.
- *
- * @since 2021-07-13
  */
 @RunWith(RobolectricTestRunner::class)
 @Suppress("UNUSED_VARIABLE")

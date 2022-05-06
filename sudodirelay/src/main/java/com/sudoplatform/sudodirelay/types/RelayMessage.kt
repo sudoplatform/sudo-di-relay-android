@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Anonyome Labs, Inc. All rights reserved.
+ * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -18,8 +18,6 @@ import java.util.Date
  * @property cipherText Text content of the message.
  * @property direction An enum representation of the message direction (inbound/outbound).
  * @property timestamp Date object capturing the time the message was sent.
- *
- * @since 2021-07-14
  */
 @Parcelize
 data class RelayMessage(

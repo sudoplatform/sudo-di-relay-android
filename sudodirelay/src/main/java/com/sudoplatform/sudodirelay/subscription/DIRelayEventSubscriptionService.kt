@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Anonyome Labs, Inc. All rights reserved.
+ * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -26,8 +26,6 @@ import kotlinx.coroutines.launch
 
 /**
  * Manage the subscriptions of decentralized identity relay event updates.
- *
- * @since 2021-06-23
  */
 internal class DIRelayEventSubscriptionService(
     private val appSyncClient: AWSAppSyncClient,

@@ -60,3 +60,4 @@ kits.gradle
 secret.properties
 sudoplatformconfig.json
 appsync_api_key.private
+api.key

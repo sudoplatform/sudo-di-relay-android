@@ -35,8 +35,6 @@ import java.util.UUID
 
 /**
  * Test the correct operation of [SudoDIRelayClient.storeMessage] using mocks and spies.
- *
- * @since 2021-07-02
  */
 class SudoDIRelayStoreMessageTest : BaseTests() {
     private val mutationInput by before {

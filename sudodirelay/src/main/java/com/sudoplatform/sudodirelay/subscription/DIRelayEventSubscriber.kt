@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Anonyome Labs, Inc. All rights reserved.
+ * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -14,7 +14,6 @@ import com.sudoplatform.sudodirelay.types.RelayMessage
  *  postbox deletion updates.
  *
  * @sample com.sudoplatform.sudodirelay.samples.Samples.subscriberInterfaceExample
- * @since 2021-07-14
  */
 interface DIRelayEventSubscriber {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Anonyome Labs, Inc. All rights reserved.
+ * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -9,12 +9,14 @@ package com.sudoplatform.sudodirelay
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.sudoplatform.sudoapiclient.ApiClientManager
 import com.sudoplatform.sudoconfigmanager.DefaultSudoConfigManager
+import com.sudoplatform.sudodirelay.TestData.TWO_MINUTE_MS
 import com.sudoplatform.sudodirelay.subscription.DIRelayEventSubscriber
 import com.sudoplatform.sudodirelay.types.PostboxDeletionResult
 import com.sudoplatform.sudodirelay.types.RelayMessage
 import com.sudoplatform.sudologging.AndroidUtilsLogDriver
 import com.sudoplatform.sudologging.LogLevel
 import com.sudoplatform.sudologging.Logger
+import com.sudoplatform.sudoprofiles.Sudo
 import io.kotlintest.fail
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldThrow
@@ -28,7 +30,6 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.awaitility.Awaitility
 import org.junit.After
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -40,8 +41,6 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Test the operation of the [SudoDIRelayClient].
- *
- * @since 2021-06-23
  */
 @RunWith(AndroidJUnit4::class)
 class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
@@ -52,12 +51,22 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     private lateinit var sudoDIRelayClient: SudoDIRelayClient
 
+    private val sudo: Sudo by lazy {
+        runBlocking {
+            sudoClient.createSudo(TestData.sudo)
+        }
+    }
+
+    private val ownershipProof: String by lazy {
+        runBlocking {
+            sudoClient.getOwnershipProof(sudo, "sudoplatform.relay.postbox")
+        }
+    }
+
     private var existingConnectionID: String? = null
 
     @Before
     fun init() = runBlocking<Unit> {
-        // Can only run if client config files are present
-        assumeTrue(clientConfigFilesPresent())
 
         Timber.plant(Timber.DebugTree())
 
@@ -77,12 +86,10 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @After
     fun fini() = runBlocking {
-        if (clientConfigFilesPresent()) {
-            if (userClient.isRegistered()) {
-                deregister()
-            }
-            userClient.reset()
+        if (userClient.isRegistered() && userClient.isSignedIn()) {
+            deregister()
         }
+        sudoClient.reset()
 
         Timber.uprootAll()
     }
@@ -90,7 +97,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
     private suspend fun getExistingConnectionId(): String {
         if (existingConnectionID == null) {
             existingConnectionID = UUID.randomUUID().toString()
-            sudoDIRelayClient.createPostbox(existingConnectionID!!)
+            sudoDIRelayClient.createPostbox(existingConnectionID!!, ownershipProof)
         }
         return existingConnectionID!!
     }
@@ -138,62 +145,58 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun shouldBeAbleToRegisterAndDeregister() = runBlocking<Unit> {
-
-        // Can only run if client config files are present
-        assumeTrue(clientConfigFilesPresent())
-
-        // given
         userClient.isRegistered() shouldBe false
-
-        // when
         register()
-
-        // then
         userClient.isRegistered() shouldBe true
-
-        // when
         signIn()
-
-        // then
         userClient.isSignedIn() shouldBe true
-
-        // when
         deregister()
-
-        // then
         userClient.isRegistered() shouldBe false
     }
 
     @Test
     fun createPostboxShouldNotThrowWithValidConnectionID() = runBlocking {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val validConnectionID = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(validConnectionID)
+        sudoDIRelayClient.createPostbox(validConnectionID, ownershipProof)
     }
 
     @Test
     fun createPostboxShouldThrowWithInvalidConnectionID() = runBlocking<Unit> {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val invalidConnectionID = "helloworld123"
         shouldThrow<SudoDIRelayClient.DIRelayException.InvalidConnectionIDException> {
-            sudoDIRelayClient.createPostbox(invalidConnectionID)
+            sudoDIRelayClient.createPostbox(invalidConnectionID, ownershipProof)
         }
     }
 
     @Test
     fun createPostboxShouldThrowWithDuplicateConnectionID() = runBlocking<Unit> {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
-            sudoDIRelayClient.createPostbox(getExistingConnectionId())
+            sudoDIRelayClient.createPostbox(getExistingConnectionId(), ownershipProof)
+        }
+    }
+
+    @Test
+    fun createPostboxShouldThrowWithInvalidJWT() = runBlocking<Unit> {
+        registerSignInAndEntitle()
+
+        val validConnectionID = UUID.randomUUID().toString()
+        val invalidJWT =
+            "eyJhbGciOiJIUzI1NiJ9.eyJVc2VybmFtZSI6IkJydWgiLCJCcnVoIjoiSW52YWxpZCIsImV4cCI6MTY1MTAyMzU4OCwiaWF0IjoxNjUxMDIzNTg4fQ.xwRQJdHhhROwRoTI0HnHzG6lJ0kz6rC5-fxjv4dZajI"
+
+        shouldThrow<SudoDIRelayClient.DIRelayException.InvalidTokenException> {
+            sudoDIRelayClient.createPostbox(validConnectionID, invalidJWT)
         }
     }
 
     @Test
     fun storeMessageShouldThrowOnInvalidPostboxID() = runBlocking<Unit> {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val invalidConnectionID = "123123123123123"
         shouldThrow<SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException> {
@@ -203,7 +206,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun storeMessageShouldThrowOnNonExistentPostboxID() = runBlocking<Unit> {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val nonExistingConnectionID = UUID.randomUUID().toString()
         shouldThrow<SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException> {
@@ -213,9 +216,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun storeMessageShouldReturnCorrectMessageOnSuccess() = runBlocking<Unit> {
-        signInAndRegister()
-
-        val twoMinutesMs = 2 * 60 * 1000L
+        registerSignInAndEntitle()
 
         val msg = sudoDIRelayClient.storeMessage(getExistingConnectionId(), "hello")
 
@@ -228,64 +229,62 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
             connectionId shouldBe getExistingConnectionId()
             cipherText shouldBe "hello"
             direction shouldBe RelayMessage.Direction.OUTBOUND
-            timestamp.after(Date(Date().time - twoMinutesMs)) shouldBe true
+            timestamp.after(Date(Date().time - TWO_MINUTE_MS)) shouldBe true
         }
     }
 
     @Test
-    fun getMessagesShouldThrowOnInvalidConnectionID() = runBlocking<Unit> {
-        signInAndRegister()
+    fun listMessagesShouldThrowOnInvalidConnectionID() = runBlocking<Unit> {
+        registerSignInAndEntitle()
 
         val invalidConnectionID = "123123123123123"
 
         shouldThrow<SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException> {
-            sudoDIRelayClient.getMessages(invalidConnectionID)
+            sudoDIRelayClient.listMessages(invalidConnectionID)
         }
     }
 
     @Test
-    fun getMessagesShouldThrowOnNonExistingConnectionID() = runBlocking<Unit> {
-        signInAndRegister()
+    fun listMessagesShouldThrowOnNonExistingConnectionID() = runBlocking<Unit> {
+        registerSignInAndEntitle()
 
         val nonExistingConnectionID = UUID.randomUUID().toString()
 
         shouldThrow<SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException> {
-            sudoDIRelayClient.getMessages(nonExistingConnectionID)
+            sudoDIRelayClient.listMessages(nonExistingConnectionID)
         }
     }
 
     @Test
-    fun getMessagesShouldNotFail() = runBlocking<Unit> {
-        signInAndRegister()
+    fun listMessagesShouldNotFail() = runBlocking<Unit> {
+        registerSignInAndEntitle()
 
-        sudoDIRelayClient.getMessages(getExistingConnectionId())
+        sudoDIRelayClient.listMessages(getExistingConnectionId())
     }
 
     @Test
-    fun getMessagesShouldReturnEmptyListForNewPostbox() = runBlocking<Unit> {
-        signInAndRegister()
+    fun listMessagesShouldReturnEmptyListForNewPostbox() = runBlocking<Unit> {
+        registerSignInAndEntitle()
 
         val connectionId = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(connectionId)
-        val messages = sudoDIRelayClient.getMessages(connectionId)
+        sudoDIRelayClient.createPostbox(connectionId, ownershipProof)
+        val messages = sudoDIRelayClient.listMessages(connectionId)
 
         messages.size shouldBe 0
     }
 
     @Test
-    fun getMessagesShouldReturnMessagePostedToIt() = runBlocking<Unit> {
-        signInAndRegister()
-
-        val twoMinutesMs = 2 * 60 * 1000L
+    fun listMessagesShouldReturnMessagePostedToIt() = runBlocking<Unit> {
+        registerSignInAndEntitle()
 
         val connectionId = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(connectionId)
+        sudoDIRelayClient.createPostbox(connectionId, ownershipProof)
 
         if (!postMessageToEndpoint("hi", connectionId)) {
             fail("http post response with code other than 200..")
         }
 
-        val messages = sudoDIRelayClient.getMessages(connectionId)
+        val messages = sudoDIRelayClient.listMessages(connectionId)
         messages.size shouldBe 1
 
         with(messages[0]) {
@@ -297,23 +296,21 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
             this.connectionId shouldBe connectionId
             cipherText shouldBe "hi"
             direction shouldBe RelayMessage.Direction.INBOUND
-            timestamp.after(Date(Date().time - twoMinutesMs)) shouldBe true
+            timestamp.after(Date(Date().time - TWO_MINUTE_MS)) shouldBe true
         }
     }
 
     @Test
-    fun getMessagesShouldReturnMessageStoredInIt() = runBlocking<Unit> {
-        signInAndRegister()
-
-        val twoMinutesMs = 2 * 60 * 1000L
+    fun listMessagesShouldReturnMessageStoredInIt() = runBlocking<Unit> {
+        registerSignInAndEntitle()
 
         val connectionId = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(connectionId)
+        sudoDIRelayClient.createPostbox(connectionId, ownershipProof)
 
         val expectedMessage =
             sudoDIRelayClient.storeMessage(connectionId, "storeGetTest")
 
-        val msgs = sudoDIRelayClient.getMessages(connectionId)
+        val msgs = sudoDIRelayClient.listMessages(connectionId)
 
         msgs.size shouldBe 1
 
@@ -324,26 +321,26 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
             this.connectionId shouldBe expectedMessage.connectionId
             cipherText shouldBe expectedMessage.cipherText
             direction shouldBe expectedMessage.direction
-            timestamp.after(Date(expectedMessage.timestamp.time - twoMinutesMs)) shouldBe true
+            timestamp.after(Date(expectedMessage.timestamp.time - TWO_MINUTE_MS)) shouldBe true
         }
     }
 
     @Test
     fun deleteMessagePassOnNormalInput() = runBlocking<Unit> {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val connectionId = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(connectionId)
+        sudoDIRelayClient.createPostbox(connectionId, ownershipProof)
 
         sudoDIRelayClient.deletePostbox(connectionId)
     }
 
     @Test
     fun subscriberShouldInvokeOnMessageConnectionIdOnIncoming() = runBlocking<Unit> {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val connectionId = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(connectionId)
+        sudoDIRelayClient.createPostbox(connectionId, ownershipProof)
 
         val messageList = mutableListOf<RelayMessage>()
 
@@ -376,10 +373,10 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun subscribeLambdaShouldInvokeOnMessageConnectionIdOnIncoming() = runBlocking {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val connectionId = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(connectionId)
+        sudoDIRelayClient.createPostbox(connectionId, ownershipProof)
 
         val messageList = mutableListOf<RelayMessage>()
 
@@ -406,12 +403,12 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun multipleSubscribersWithDifferentConnectionIDShouldSucceed() = runBlocking {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val connectionId1 = UUID.randomUUID().toString()
         val connectionId2 = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(connectionId1)
-        sudoDIRelayClient.createPostbox(connectionId2)
+        sudoDIRelayClient.createPostbox(connectionId1, ownershipProof)
+        sudoDIRelayClient.createPostbox(connectionId2, ownershipProof)
 
         val messageList1 = mutableListOf<RelayMessage>()
         val messageList2 = mutableListOf<RelayMessage>()
@@ -463,11 +460,11 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun newSubscriberWithSameConnectionIDShouldReplace() = runBlocking<Unit> {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val connectionId = UUID.randomUUID().toString()
 
-        sudoDIRelayClient.createPostbox(connectionId)
+        sudoDIRelayClient.createPostbox(connectionId, ownershipProof)
 
         val messageList1 = mutableListOf<RelayMessage>()
         val messageList2 = mutableListOf<RelayMessage>()
@@ -518,25 +515,24 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun deletePostboxShouldSucceedAndDeletePostbox() = runBlocking<Unit> {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val connectionId = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(connectionId)
+        sudoDIRelayClient.createPostbox(connectionId, ownershipProof)
 
         sudoDIRelayClient.deletePostbox(connectionId)
 
-        // TODO - re-enable after DIP-741 is resolved
-//        shouldThrow<SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException> {
-//            sudoDIRelayClient.getMessages(connectionId)
-//        }
+        shouldThrow<SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException> {
+            sudoDIRelayClient.listMessages(connectionId)
+        }
     }
 
     @Test
     fun deletePostboxShouldNotifySubscriber() = runBlocking<Unit> {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val connectionId = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(connectionId)
+        sudoDIRelayClient.createPostbox(connectionId, ownershipProof)
 
         var postboxDeleted = false
 
@@ -563,12 +559,12 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun fastUnsubscribeSubscribeShouldNotUnsubscribe() = runBlocking<Unit> {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val connectionId1 = UUID.randomUUID().toString()
         var connectionId1Notification = false
 
-        sudoDIRelayClient.createPostbox(connectionId1)
+        sudoDIRelayClient.createPostbox(connectionId1, ownershipProof)
 
         sudoDIRelayClient.subscribeToRelayEvents(
             connectionId1,
@@ -621,7 +617,7 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun unsubscribeShouldNotUnsubscribeAll() = runBlocking<Unit> {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val connectionId1 = UUID.randomUUID().toString()
         var connectionId1Notification = false
@@ -629,8 +625,8 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
         val connectionId2 = UUID.randomUUID().toString()
         var connectionId2Notification = false
 
-        sudoDIRelayClient.createPostbox(connectionId1)
-        sudoDIRelayClient.createPostbox(connectionId2)
+        sudoDIRelayClient.createPostbox(connectionId1, ownershipProof)
+        sudoDIRelayClient.createPostbox(connectionId2, ownershipProof)
 
         sudoDIRelayClient.subscribeToRelayEvents(
             connectionId1,
@@ -669,10 +665,10 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun unsubscribeAllShouldSucceed() = runBlocking<Unit> {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         val connectionId = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(connectionId)
+        sudoDIRelayClient.createPostbox(connectionId, ownershipProof)
 
         sudoDIRelayClient.subscribeToRelayEvents(
             connectionId,
@@ -685,24 +681,60 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
+    fun listPostboxesShouldListInOrderOfTimestamp() = runBlocking<Unit> {
+        registerSignInAndEntitle()
+
+        val connectionId1 = UUID.randomUUID().toString()
+        sudoDIRelayClient.createPostbox(connectionId1, ownershipProof)
+
+        val connectionId2 = UUID.randomUUID().toString()
+        sudoDIRelayClient.createPostbox(connectionId2, ownershipProof)
+
+        val connectionId3 = UUID.randomUUID().toString()
+        sudoDIRelayClient.createPostbox(connectionId3, ownershipProof)
+
+        val postboxes = sudoDIRelayClient.listPostboxesForSudoId(sudo.id!!)
+
+        postboxes.size shouldBe 3
+
+        with(postboxes[0]) {
+            connectionId shouldBe connectionId1
+            sudoId shouldBe sudo.id!!
+            timestamp.after(Date(Date().time - TWO_MINUTE_MS)) shouldBe true
+        }
+
+        with(postboxes[1]) {
+            connectionId shouldBe connectionId2
+            sudoId shouldBe sudo.id!!
+            timestamp.after(Date(Date().time - TWO_MINUTE_MS)) shouldBe true
+        }
+
+        with(postboxes[2]) {
+            connectionId shouldBe connectionId3
+            sudoId shouldBe sudo.id!!
+            timestamp.after(Date(Date().time - TWO_MINUTE_MS)) shouldBe true
+        }
+    }
+
+    @Test
     fun completeFlowShouldSucceed() = runBlocking<Unit> {
-        signInAndRegister()
+        registerSignInAndEntitle()
 
         // set up postbox1
         val postbox1 = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(postbox1)
+        sudoDIRelayClient.createPostbox(postbox1, ownershipProof)
         var postbox1Deleted = false
         val postbox1IncomingMessages = mutableListOf<RelayMessage>()
 
         // set up postbox2
         val postbox2 = UUID.randomUUID().toString()
-        sudoDIRelayClient.createPostbox(postbox2)
+        sudoDIRelayClient.createPostbox(postbox2, ownershipProof)
         var postbox2Deleted = false
         val postbox2IncomingMessages = mutableListOf<RelayMessage>()
 
         // check both postboxes have no messages
-        sudoDIRelayClient.getMessages(postbox1) shouldBe emptyList()
-        sudoDIRelayClient.getMessages(postbox2) shouldBe emptyList()
+        sudoDIRelayClient.listMessages(postbox1) shouldBe emptyList()
+        sudoDIRelayClient.listMessages(postbox2) shouldBe emptyList()
 
         // subscribe to events for postbox 1
         sudoDIRelayClient.subscribeToRelayEvents(
@@ -758,9 +790,9 @@ class SudoDIRelayClientIntegrationTest : BaseIntegrationTest() {
             }
         postbox1IncomingMessages[0].cipherText shouldBe messageFromPostbox2to1
 
-        // check the getMessages for both postboxes are correct
-        val postbox1Messages = sudoDIRelayClient.getMessages(postbox1)
-        val postbox2Messages = sudoDIRelayClient.getMessages(postbox2)
+        // check the listMessages for both postboxes are correct
+        val postbox1Messages = sudoDIRelayClient.listMessages(postbox1)
+        val postbox2Messages = sudoDIRelayClient.listMessages(postbox2)
 
         postbox1Messages.size shouldBe 2
         postbox2Messages.size shouldBe 2

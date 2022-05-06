@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Anonyome Labs, Inc. All rights reserved.
+ * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -19,8 +19,6 @@ import com.apollographql.apollo.fetcher.ResponseFetcher
 
 /**
  * A test helper for mocking GraphQL operations and callbacks.
- *
- * @since 2021-06-23
  */
 class CallbackHolder<D> {
 

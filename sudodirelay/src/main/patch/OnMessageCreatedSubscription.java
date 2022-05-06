@@ -28,15 +28,15 @@ import javax.annotation.Nullable;
 @Generated("Apollo GraphQL")
 public final class OnMessageCreatedSubscription implements Subscription<OnMessageCreatedSubscription.Data, OnMessageCreatedSubscription.Data, OnMessageCreatedSubscription.Variables> {
   public static final String OPERATION_DEFINITION = "subscription OnMessageCreated($connectionId: ID!, $direction: Direction!) {\n"
-      + "  onMessageCreated(connectionId: $connectionId, direction: $direction) {\n"
-      + "    __typename\n"
-      + "    messageId\n"
-      + "    connectionId\n"
-      + "    cipherText\n"
-      + "    direction\n"
-      + "    utcTimestamp\n"
-      + "  }\n"
-      + "}";
+          + "  onMessageCreated(connectionId: $connectionId, direction: $direction) {\n"
+          + "    __typename\n"
+          + "    messageId\n"
+          + "    connectionId\n"
+          + "    cipherText\n"
+          + "    direction\n"
+          + "    utcTimestamp\n"
+          + "  }\n"
+          + "}";
 
   public static final String QUERY_DOCUMENT = OPERATION_DEFINITION;
 
@@ -155,16 +155,16 @@ public final class OnMessageCreatedSubscription implements Subscription<OnMessag
 
   public static class Data implements Operation.Data {
     static final ResponseField[] $responseFields = {
-      ResponseField.forObject("onMessageCreated", "onMessageCreated", new UnmodifiableMapBuilder<String, Object>(2)
-        .put("connectionId", new UnmodifiableMapBuilder<String, Object>(2)
-          .put("kind", "Variable")
-          .put("variableName", "connectionId")
-        .build())
-        .put("direction", new UnmodifiableMapBuilder<String, Object>(2)
-          .put("kind", "Variable")
-          .put("variableName", "direction")
-        .build())
-      .build(), true, Collections.<ResponseField.Condition>emptyList())
+            ResponseField.forObject("onMessageCreated", "onMessageCreated", new UnmodifiableMapBuilder<String, Object>(2)
+                    .put("connectionId", new UnmodifiableMapBuilder<String, Object>(2)
+                            .put("kind", "Variable")
+                            .put("variableName", "connectionId")
+                            .build())
+                    .put("direction", new UnmodifiableMapBuilder<String, Object>(2)
+                            .put("kind", "Variable")
+                            .put("variableName", "direction")
+                            .build())
+                    .build(), true, Collections.<ResponseField.Condition>emptyList())
     };
 
     final @Nullable OnMessageCreated onMessageCreated;
@@ -196,8 +196,8 @@ public final class OnMessageCreatedSubscription implements Subscription<OnMessag
     public String toString() {
       if ($toString == null) {
         $toString = "Data{"
-          + "onMessageCreated=" + onMessageCreated
-          + "}";
+                + "onMessageCreated=" + onMessageCreated
+                + "}";
       }
       return $toString;
     }
@@ -244,12 +244,12 @@ public final class OnMessageCreatedSubscription implements Subscription<OnMessag
 
   public static class OnMessageCreated {
     static final ResponseField[] $responseFields = {
-      ResponseField.forString("__typename", "__typename", null, false, Collections.<ResponseField.Condition>emptyList()),
-      ResponseField.forCustomType("messageId", "messageId", null, false, CustomType.ID, Collections.<ResponseField.Condition>emptyList()),
-      ResponseField.forCustomType("connectionId", "connectionId", null, false, CustomType.ID, Collections.<ResponseField.Condition>emptyList()),
-      ResponseField.forString("cipherText", "cipherText", null, false, Collections.<ResponseField.Condition>emptyList()),
-      ResponseField.forString("direction", "direction", null, false, Collections.<ResponseField.Condition>emptyList()),
-      ResponseField.forDouble("utcTimestamp", "utcTimestamp", null, false, Collections.<ResponseField.Condition>emptyList())
+            ResponseField.forString("__typename", "__typename", null, false, Collections.<ResponseField.Condition>emptyList()),
+            ResponseField.forCustomType("messageId", "messageId", null, false, CustomType.ID, Collections.<ResponseField.Condition>emptyList()),
+            ResponseField.forCustomType("connectionId", "connectionId", null, false, CustomType.ID, Collections.<ResponseField.Condition>emptyList()),
+            ResponseField.forString("cipherText", "cipherText", null, false, Collections.<ResponseField.Condition>emptyList()),
+            ResponseField.forString("direction", "direction", null, false, Collections.<ResponseField.Condition>emptyList()),
+            ResponseField.forDouble("utcTimestamp", "utcTimestamp", null, false, Collections.<ResponseField.Condition>emptyList())
     };
 
     final @Nonnull String __typename;
@@ -271,8 +271,8 @@ public final class OnMessageCreatedSubscription implements Subscription<OnMessag
     private volatile boolean $hashCodeMemoized;
 
     public OnMessageCreated(@Nonnull String __typename, @Nonnull String messageId,
-        @Nonnull String connectionId, @Nonnull String cipherText, @Nonnull Direction direction,
-        double utcTimestamp) {
+                            @Nonnull String connectionId, @Nonnull String cipherText, @Nonnull Direction direction,
+                            double utcTimestamp) {
       this.__typename = Utils.checkNotNull(__typename, "__typename == null");
       this.messageId = Utils.checkNotNull(messageId, "messageId == null");
       this.connectionId = Utils.checkNotNull(connectionId, "connectionId == null");
@@ -323,13 +323,13 @@ public final class OnMessageCreatedSubscription implements Subscription<OnMessag
     public String toString() {
       if ($toString == null) {
         $toString = "OnMessageCreated{"
-          + "__typename=" + __typename + ", "
-          + "messageId=" + messageId + ", "
-          + "connectionId=" + connectionId + ", "
-          + "cipherText=" + cipherText + ", "
-          + "direction=" + direction + ", "
-          + "utcTimestamp=" + utcTimestamp
-          + "}";
+                + "__typename=" + __typename + ", "
+                + "messageId=" + messageId + ", "
+                + "connectionId=" + connectionId + ", "
+                + "cipherText=" + cipherText + ", "
+                + "direction=" + direction + ", "
+                + "utcTimestamp=" + utcTimestamp
+                + "}";
       }
       return $toString;
     }
@@ -342,11 +342,11 @@ public final class OnMessageCreatedSubscription implements Subscription<OnMessag
       if (o instanceof OnMessageCreated) {
         OnMessageCreated that = (OnMessageCreated) o;
         return this.__typename.equals(that.__typename)
-         && this.messageId.equals(that.messageId)
-         && this.connectionId.equals(that.connectionId)
-         && this.cipherText.equals(that.cipherText)
-         && this.direction.equals(that.direction)
-         && Double.doubleToLongBits(this.utcTimestamp) == Double.doubleToLongBits(that.utcTimestamp);
+                && this.messageId.equals(that.messageId)
+                && this.connectionId.equals(that.connectionId)
+                && this.cipherText.equals(that.cipherText)
+                && this.direction.equals(that.direction)
+                && Double.doubleToLongBits(this.utcTimestamp) == Double.doubleToLongBits(that.utcTimestamp);
       }
       return false;
     }

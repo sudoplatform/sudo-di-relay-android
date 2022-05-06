@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Anonyome Labs, Inc. All rights reserved.
+ * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -7,9 +7,11 @@
 package com.sudoplatform.sudodirelay.types.transformers
 
 import com.sudoplatform.sudodirelay.graphql.GetMessagesQuery
+import com.sudoplatform.sudodirelay.graphql.ListPostboxesForSudoIdQuery
 import com.sudoplatform.sudodirelay.graphql.OnMessageCreatedSubscription
 import com.sudoplatform.sudodirelay.graphql.OnPostBoxDeletedSubscription
 import com.sudoplatform.sudodirelay.graphql.type.Direction
+import com.sudoplatform.sudodirelay.types.Postbox
 import com.sudoplatform.sudodirelay.types.PostboxDeletionResult
 import com.sudoplatform.sudodirelay.types.RelayMessage
 import java.util.Date
@@ -17,8 +19,6 @@ import java.util.Date
 /**
  * Transformer response for transforming the GraphQL data types to the entity type that is
  *  exposed to consumers.
- *
- * @since 2021-07-14
  */
 internal object RelayMessageTransformer {
 
@@ -70,6 +70,23 @@ internal object RelayMessageTransformer {
             postboxDeleted.connectionId(),
             postboxDeleted.remainingMessages().map { it.messageId() }
         )
+    }
+
+    /**
+     * Transform the result of the [ListPostboxesForSudoIdQuery] to a list of [Postbox]s.
+     *
+     * @param [postboxesForSudoId] the GraphQL query result returned from [ListPostboxesForSudoIdQuery].
+     * @return the list of [Postbox] entity types.
+     */
+    fun toEntityFromListPostboxesForSudoId(postboxesForSudoId: List<ListPostboxesForSudoIdQuery.ListPostboxesForSudoId>): List<Postbox> {
+        return postboxesForSudoId.map { rawPostbox ->
+            Postbox(
+                connectionId = rawPostbox.connectionId(),
+                userId = rawPostbox.owner(),
+                sudoId = rawPostbox.sudoId(),
+                timestamp = Date(rawPostbox.utcTimestamp().toLong())
+            )
+        }
     }
 
     internal fun Direction.toEntityDirection(): RelayMessage.Direction {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Anonyome Labs, Inc. All rights reserved.
+ * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -16,14 +16,18 @@ import com.sudoplatform.sudodirelay.appsync.enqueue
 import com.sudoplatform.sudodirelay.appsync.enqueueFirst
 import com.sudoplatform.sudodirelay.graphql.DeletePostBoxMutation
 import com.sudoplatform.sudodirelay.graphql.GetMessagesQuery
+import com.sudoplatform.sudodirelay.graphql.ListPostboxesForSudoIdQuery
 import com.sudoplatform.sudodirelay.graphql.SendInitMutation
 import com.sudoplatform.sudodirelay.graphql.StoreMessageMutation
+import com.sudoplatform.sudodirelay.graphql.type.CreatePostboxInput
 import com.sudoplatform.sudodirelay.graphql.type.Direction
 import com.sudoplatform.sudodirelay.graphql.type.IdAsInput
+import com.sudoplatform.sudodirelay.graphql.type.ListPostboxesForSudoIdInput
 import com.sudoplatform.sudodirelay.graphql.type.WriteToRelayInput
 import com.sudoplatform.sudodirelay.logging.LogConstants
 import com.sudoplatform.sudodirelay.subscription.DIRelayEventSubscriber
 import com.sudoplatform.sudodirelay.subscription.DIRelayEventSubscriptionService
+import com.sudoplatform.sudodirelay.types.Postbox
 import com.sudoplatform.sudodirelay.types.RelayMessage
 import com.sudoplatform.sudodirelay.types.transformers.RelayMessageTransformer
 import com.sudoplatform.sudologging.AndroidUtilsLogDriver
@@ -43,8 +47,6 @@ import java.util.concurrent.CancellationException
  *  identity relay service API.
  * @property sudoUserClient The [SudoUserClient] used to determine if a user is signed in and gain access to the user owner ID.
  * @property logger Errors and warnings will be logged here.
- *
- * @since 2021-07-14
  */
 internal class DefaultSudoDIRelayClient(
     private val context: Context,
@@ -63,39 +65,45 @@ internal class DefaultSudoDIRelayClient(
         internal const val DELETE_POSTBOX_ERROR_MSG = "The postbox deletion failed."
         internal const val UNAUTHORIZED_POSTBOX_ERROR_MSG =
             "Access to the postbox with provided connectionId is unauthorized."
+        private const val INVALID_TOKEN_MSG = "An invalid token error has occurred"
 
         /** Errors returned from the service */
         private const val ERROR_TYPE = "errorType"
-        private const val SERVICE_ERROR = "ServiceError"
-        private const val UNAUTHORIZED_POSTBOX_ERROR = "UnauthorizedPostboxAccess"
-        private const val INVALID_INIT_MESSAGE_ERROR = "InvalidInitMessage"
+        private const val SERVICE_ERROR = "sudoplatform.ServiceError"
+        private const val INVALID_TOKEN_ERROR = "sudoplatform.InvalidTokenError"
+        private const val UNAUTHORIZED_POSTBOX_ERROR = "sudoplatform.relay.UnauthorizedPostboxAccess"
+        private const val INVALID_INIT_MESSAGE_ERROR = "sudoplatform.relay.InvalidInitMessage"
     }
 
     private val relayEventSubscriptions =
         DIRelayEventSubscriptionService(appSyncClient, logger)
 
     @Throws(SudoDIRelayClient.DIRelayException::class)
-    override suspend fun createPostbox(connectionId: String) {
+    override suspend fun createPostbox(connectionId: String, ownershipProofToken: String) {
         try {
-
-            val idAsInput =
-                IdAsInput.builder()
+            val createPostboxInput =
+                CreatePostboxInput.builder()
                     .connectionId(connectionId)
+                    .ownershipProofTokens(listOf(ownershipProofToken))
                     .build()
 
             val mutation = SendInitMutation.builder()
-                .input(idAsInput)
+                .input(createPostboxInput)
                 .build()
 
             val mutationResponse = appSyncClient.mutate(mutation)
                 .enqueue()
 
             if (mutationResponse.hasErrors()) {
-                logger.warning("createPostbox errors = ${mutationResponse.errors()}")
+                logger.error("createPostbox errors = ${mutationResponse.errors()}")
                 throw interpretError(mutationResponse.errors().first())
             }
+
+            if (mutationResponse.data()?.sendInit() == null) {
+                throw SudoDIRelayClient.DIRelayException.FailedException()
+            }
         } catch (e: Throwable) {
-            logger.debug("unexpected error $e")
+            logger.error("unexpected error $e")
             throw interpretException(e)
         }
     }
@@ -126,7 +134,7 @@ internal class DefaultSudoDIRelayClient(
                 .enqueue()
 
             if (mutationResponse.hasErrors()) {
-                logger.warning("storeMessage errors = ${mutationResponse.errors()}")
+                logger.error("storeMessage errors = ${mutationResponse.errors()}")
                 throw interpretError(mutationResponse.errors().first())
             }
 
@@ -138,7 +146,7 @@ internal class DefaultSudoDIRelayClient(
                 timestamp = Date(currentDate)
             )
         } catch (e: Throwable) {
-            logger.debug("unexpected error $e")
+            logger.error("unexpected error $e")
             throw interpretException(e)
         }
     }
@@ -154,7 +162,7 @@ internal class DefaultSudoDIRelayClient(
                 .enqueue()
 
             if (mutationResponse.hasErrors()) {
-                logger.warning("deletePostbox errors = ${mutationResponse.errors()}")
+                logger.error("deletePostbox errors = ${mutationResponse.errors()}")
                 throw interpretError(mutationResponse.errors().first())
             }
 
@@ -165,13 +173,13 @@ internal class DefaultSudoDIRelayClient(
                     .DIRelayException.FailedException(DELETE_POSTBOX_ERROR_MSG)
             }
         } catch (e: Throwable) {
-            logger.debug("unexpected error $e")
+            logger.error("unexpected error $e")
             throw interpretException(e)
         }
     }
 
     @Throws(SudoDIRelayClient.DIRelayException::class)
-    override suspend fun getMessages(connectionId: String): List<RelayMessage> {
+    override suspend fun listMessages(connectionId: String): List<RelayMessage> {
         try {
             val idAsInput = IdAsInput.builder().connectionId(connectionId).build()
 
@@ -182,16 +190,16 @@ internal class DefaultSudoDIRelayClient(
                 .enqueueFirst()
 
             if (queryResponse.hasErrors()) {
-                logger.warning("getMessages errors = ${queryResponse.errors()}")
+                logger.error("getMessages errors = ${queryResponse.errors()}")
                 throw interpretError(queryResponse.errors().first())
             }
 
-            val rawMessages = queryResponse.data()?.messages ?: listOf()
+            val rawMessages = queryResponse.data()?.messages ?: emptyList()
 
             return RelayMessageTransformer.toEntityFromGetMessages(rawMessages)
                 .sortedBy { it.timestamp }
         } catch (e: Throwable) {
-            logger.debug("unexpected error $e")
+            logger.error("unexpected error $e")
             throw interpretException(e)
         }
     }
@@ -225,6 +233,31 @@ internal class DefaultSudoDIRelayClient(
         return "$baseEndpoint/$connectionId"
     }
 
+    override suspend fun listPostboxesForSudoId(sudoId: String): List<Postbox> {
+        try {
+            val input = ListPostboxesForSudoIdInput.builder().sudoId(sudoId).build()
+
+            val query = ListPostboxesForSudoIdQuery.builder().input(input).build()
+
+            val queryResponse = appSyncClient.query(query)
+                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
+                .enqueueFirst()
+
+            if (queryResponse.hasErrors()) {
+                logger.error("getPostboxesForSudoId errors = ${queryResponse.errors()}")
+                throw interpretError(queryResponse.errors().first())
+            }
+
+            val rawPostboxes = queryResponse.data()?.listPostboxesForSudoId() ?: emptyList()
+
+            return RelayMessageTransformer.toEntityFromListPostboxesForSudoId(rawPostboxes)
+                .sortedBy { it.timestamp }
+        } catch (e: Throwable) {
+            logger.error("unexpected error $e")
+            throw interpretException(e)
+        }
+    }
+
     /** Private Methods */
 
     private fun interpretError(
@@ -235,6 +268,12 @@ internal class DefaultSudoDIRelayClient(
             error.contains(SERVICE_ERROR) -> {
                 return SudoDIRelayClient
                     .DIRelayException.FailedException(e.toString())
+            }
+            error.contains(INVALID_TOKEN_ERROR) -> {
+                return SudoDIRelayClient
+                    .DIRelayException.InvalidTokenException(
+                        INVALID_TOKEN_MSG
+                    )
             }
             error.contains(INVALID_INIT_MESSAGE_ERROR) -> {
                 return SudoDIRelayClient
