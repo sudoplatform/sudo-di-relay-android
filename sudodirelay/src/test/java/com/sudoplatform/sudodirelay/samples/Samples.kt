@@ -1,5 +1,5 @@
 /*
- * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
+ * Copyright © 2023 Anonyome Labs, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -9,9 +9,9 @@ package com.sudoplatform.sudodirelay.samples
 import android.content.Context
 import com.sudoplatform.sudodirelay.BaseTests
 import com.sudoplatform.sudodirelay.SudoDIRelayClient
-import com.sudoplatform.sudodirelay.subscription.DIRelayEventSubscriber
-import com.sudoplatform.sudodirelay.types.PostboxDeletionResult
-import com.sudoplatform.sudodirelay.types.RelayMessage
+import com.sudoplatform.sudodirelay.subscription.MessageSubscriber
+import com.sudoplatform.sudodirelay.subscription.Subscriber
+import com.sudoplatform.sudodirelay.types.Message
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
@@ -39,16 +39,12 @@ class Samples : BaseTests() {
     }
 
     fun subscriberInterfaceExample() {
-        val subscriber = object : DIRelayEventSubscriber {
-            override fun messageIncoming(message: RelayMessage) {
+        val subscriber = object : MessageSubscriber {
+            override fun messageCreated(message: Message) {
                 println("new message incoming! $message")
             }
 
-            override fun postBoxDeleted(update: PostboxDeletionResult) {
-                println("post box has deleted with update: $update")
-            }
-
-            override fun connectionStatusChanged(state: DIRelayEventSubscriber.ConnectionState) {
+            override fun connectionStatusChanged(state: Subscriber.ConnectionState) {
                 println("connection has changed to state: $state")
             }
         }

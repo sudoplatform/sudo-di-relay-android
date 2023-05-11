@@ -1,10 +1,10 @@
 buildscript {
-    ext.kotlin_version = '1.6.10'
+    ext.kotlin_version = '1.7.20'
     ext.plugin_version = '2.2.0'
-    ext.appsync_version = '3.3.0'
-    ext.aws_version = "2.42.0"
-    ext.dokka_version = '1.6.10'
-    ext.jacoco_version = "0.8.7"
+    ext.appsync_version = '3.3.2'
+    ext.aws_version = "2.62.0"
+    ext.dokka_version = '1.7.20'
+    ext.jacoco_version = "0.8.8"
 
     repositories {
         mavenLocal()

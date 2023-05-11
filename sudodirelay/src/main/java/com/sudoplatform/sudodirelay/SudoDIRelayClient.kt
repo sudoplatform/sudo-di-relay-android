@@ -1,5 +1,5 @@
 /*
- * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
+ * Copyright © 2023 Anonyome Labs, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -9,12 +9,12 @@ package com.sudoplatform.sudodirelay
 import android.content.Context
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
 import com.sudoplatform.sudoapiclient.ApiClientManager
-import com.sudoplatform.sudoconfigmanager.DefaultSudoConfigManager
 import com.sudoplatform.sudodirelay.logging.LogConstants
-import com.sudoplatform.sudodirelay.subscription.DIRelayEventSubscriber
+import com.sudoplatform.sudodirelay.subscription.MessageSubscriber
+import com.sudoplatform.sudodirelay.subscription.Subscriber
+import com.sudoplatform.sudodirelay.types.ListOutput
+import com.sudoplatform.sudodirelay.types.Message
 import com.sudoplatform.sudodirelay.types.Postbox
-import com.sudoplatform.sudodirelay.types.PostboxDeletionResult
-import com.sudoplatform.sudodirelay.types.RelayMessage
 import com.sudoplatform.sudologging.AndroidUtilsLogDriver
 import com.sudoplatform.sudologging.LogLevel
 import com.sudoplatform.sudologging.Logger
@@ -86,13 +86,6 @@ interface SudoDIRelayClient {
                 this@Builder.sudoUserClient!!
             )
 
-            Objects.requireNonNull(
-                DefaultSudoConfigManager(this@Builder.context!!, this@Builder.logger)
-                    .getConfigSet("relayService")
-                    ?.get("httpEndpoint") as String?,
-                "The parameter 'relayService.httpEndpoint' was not found in sudo configuration."
-            )
-
             return DefaultSudoDIRelayClient(
                 context = context!!,
                 appSyncClient = appSyncClient,
@@ -115,7 +108,10 @@ interface SudoDIRelayClient {
         class FailedException(message: String? = null, cause: Throwable? = null) :
             DIRelayException(message = message, cause = cause)
 
-        class InvalidConnectionIDException(message: String? = null, cause: Throwable? = null) :
+        class AuthenticationException(message: String? = null, cause: Throwable? = null) :
+            DIRelayException(message = message, cause = cause)
+
+        class InvalidPostboxInputException(message: String? = null, cause: Throwable? = null) :
             DIRelayException(message = message, cause = cause)
 
         class InvalidTokenException(message: String? = null, cause: Throwable? = null) :
@@ -136,111 +132,103 @@ interface SudoDIRelayClient {
      *  proof must contain an audience of "sudoplatform.relay.postbox".
      */
     @Throws(DIRelayException::class)
-    suspend fun createPostbox(connectionId: String, ownershipProofToken: String)
+    suspend fun createPostbox(connectionId: String, ownershipProofToken: String, isEnabled: Boolean? = true): Postbox
 
     /**
-     * Stores a message with the text contents of [cipherText] in the relay postbox with ID of [connectionId].
-     * The message stored in the postbox will have a timestamp of the current system time, a random
-     *  v4 UUID string as messageID, and a direction of OUTBOUND.
+     * Request update of the relay postbox with ID of [postboxId].
      *
-     * @param connectionId [String] the postbox identifier to store a message in.
-     * @param cipherText [String] the string of text to store.
-     * @return the [RelayMessage] that was stored in the postbox.
+     * @param postboxId [String] the postbox identifier to be updated.
+     * @param isEnabled [Boolean?] the new value for postbox enabled status
+     * @return the identifier of the deleted postbox
      */
     @Throws(DIRelayException::class)
-    suspend fun storeMessage(connectionId: String, cipherText: String): RelayMessage
+    suspend fun updatePostbox(postboxId: String, isEnabled: Boolean? = null): Postbox
 
     /**
-     * Begins an async task to delete the relay postbox with ID of [connectionId].
-     *  The [subscriber] of [subscribeToRelayEvents] is notified when this task finishes.
+     * Request deletion of the relay postbox with ID of [postboxId].
      *
-     * @param connectionId [String] the postbox identifier to be deleted.
+     * @param postboxId [String] the postbox identifier to be deleted.
+     * @return the identifier of the deleted postbox
      */
     @Throws(DIRelayException::class)
-    suspend fun deletePostbox(connectionId: String)
+    suspend fun deletePostbox(postboxId: String): String
 
     /**
-     * Gets a list of all [RelayMessage]s at the postbox with ID of [connectionId].
+     * Gets a list of postboxes for the current user.
      *
-     * @param connectionId [String] the postbox identifier to get messages from.
-     * @return [List<RelayMessages>] list of [RelayMessage]s at the given postbox, or empty list
-     *  if nothing found.
+     * @param limit: [Int?] the maximum number of postboxes to be returned
+     * @param nextToken: [String?] pagination result from previous calls, if any
+     * @return ListOutput<Postbox> a list of [Postbox]s owned by the current user, if any,
+     * along with a pagination token if more are available.
      */
     @Throws(DIRelayException::class)
-    suspend fun listMessages(connectionId: String): List<RelayMessage>
+    suspend fun listPostboxes(limit: Int? = null, nextToken: String? = null): ListOutput<Postbox>
 
     /**
-     * Subscribes to notifications: of incoming messages and when the postbox has finished
-     *  being deleted.
+     * Request deletion of the message with ID of [messageId].
      *
-     * @param connectionId [String] The postbox identifier to subscribe to events for.
-     * @param subscriber The [DIRelayEventSubscriber] to notify.
+     * @param messageId [String] the message identifier to be deleted.
+     */
+    @Throws(DIRelayException::class)
+    suspend fun deleteMessage(messageId: String)
+
+    /**
+     * Gets a list of at most limit [Message]s for the current user.
+     *
+     * @param limit [Int?] the maximum number of messages to retrieve.
+     * @param nextToken: [String?] pagination result from previous calls, if any
+     * @return OutputList<Message> list of [Message]s for the current user, and a pagination token.
+     */
+    @Throws(DIRelayException::class)
+    suspend fun listMessages(limit: Int? = null, nextToken: String? = null): ListOutput<Message>
+
+    /**
+     * Subscribes to notifications of incoming messages for the current user.
+     * Resubscribing with the same identifier will replace the existing subscription.
+     *
+     * @param subscriberId [String] A unique subscription identifier.
+     * @param subscriber The [MessageSubscriber] to notify.
      */
     suspend fun subscribeToRelayEvents(
-        connectionId: String,
-        subscriber: DIRelayEventSubscriber
+        subscriberId: String,
+        subscriber: MessageSubscriber
     )
 
     /**
-     * Unsubscribe from relay events for the postbox with ID [connectionId] so that the subscriber
-     *  is no longer notified about incoming messages or postbox deletion events.
+     * Unsubscribe from relay events with the subscription identifier [subscriberId] so that the subscriber
+     *  is no longer notified about incoming messages.
      *
-     * @param connectionId [String] The postbox identifier to unsubscribe to events from.
+     * @param subscriberId [String] The postbox identifier to unsubscribe to events from.
      */
-    suspend fun unsubscribeToRelayEvents(connectionId: String)
+    suspend fun unsubscribeToRelayEvents(subscriberId: String)
 
     /**
      * Unsubscribe all subscribers from being notified about relay events.
      */
     suspend fun unsubscribeAll()
-
-    /**
-     * Gets the HTTP endpoint of a postbox with the given [connectionId]. This endpoint can
-     *  be used by peers to POST messages to.
-     *
-     * @param connectionId [String] The postbox identifier to get the endpoint of.
-     * @return String URL of the HTTP address where peers can POST messages to the given postbox.
-     */
-    fun getPostboxEndpoint(connectionId: String): String
-
-    /**
-     * Gets a list of postboxes that are associated with the given [sudoId].
-     *
-     * @param sudoId [String] the [Sudo]'s identifier.
-     * @return [List<Postbox>] a list of [Postbox]s owned by the [sudoId], or empty if an invalid
-     *  [sudoId] is provided.
-     */
-    suspend fun listPostboxesForSudoId(sudoId: String): List<Postbox>
 }
 
 /**
- * Subscribes to be notified of incoming messages, and/or if the postbox has finished deleting,
- *  at the postbox with ID of [connectionId].
+ * Subscribes to be notified of incoming messages.
  *
- * @param connectionId The postbox identifier to subscribe to events for.
+ * @param subscriberId A unique subscription identifier.
  * @param onConnectionChange Lambda that is invoked when the subscription connection state changes.
- * @param onMessageIncoming Lambda that is invoked on an incoming [RelayMessage] and is passed
- *  that [RelayMessage].
- * @param onPostboxDeleted Lambda that is invoked when the postbox deletion finishes.
+ * @param messageCreated Lambda that is invoked on an incoming [Message] and is passed
+ *  that [Message].
  */
 suspend fun SudoDIRelayClient.subscribeToRelayEvents(
-    connectionId: String,
-    onConnectionChange: (status: DIRelayEventSubscriber.ConnectionState) -> Unit = {},
-    onMessageIncoming: (relayMessage: RelayMessage) -> Unit,
-    onPostboxDeleted: (postBoxUpdate: PostboxDeletionResult) -> Unit
+    subscriberId: String,
+    onConnectionChange: (status: Subscriber.ConnectionState) -> Unit = {},
+    messageCreated: (relayMessage: Message) -> Unit,
 ) =
     subscribeToRelayEvents(
-        connectionId,
-        object : DIRelayEventSubscriber {
-            override fun messageIncoming(message: RelayMessage) {
-                onMessageIncoming.invoke(message)
+        subscriberId,
+        object : MessageSubscriber {
+            override fun messageCreated(message: Message) {
+                messageCreated.invoke(message)
             }
 
-            override fun postBoxDeleted(update: PostboxDeletionResult) {
-                onPostboxDeleted.invoke(update)
-            }
-
-            override fun connectionStatusChanged(state: DIRelayEventSubscriber.ConnectionState) {
+            override fun connectionStatusChanged(state: Subscriber.ConnectionState) {
                 onConnectionChange.invoke(state)
             }
         }

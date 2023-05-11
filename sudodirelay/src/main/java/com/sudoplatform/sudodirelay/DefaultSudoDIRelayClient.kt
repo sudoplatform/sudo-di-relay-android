@@ -1,5 +1,5 @@
 /*
- * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
+ * Copyright © 2023 Anonyome Labs, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -11,32 +11,31 @@ import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers
 import com.apollographql.apollo.api.Error
 import com.apollographql.apollo.exception.ApolloException
-import com.sudoplatform.sudoconfigmanager.DefaultSudoConfigManager
+import com.sudoplatform.sudodirelay.SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException
 import com.sudoplatform.sudodirelay.appsync.enqueue
 import com.sudoplatform.sudodirelay.appsync.enqueueFirst
-import com.sudoplatform.sudodirelay.graphql.DeletePostBoxMutation
-import com.sudoplatform.sudodirelay.graphql.GetMessagesQuery
-import com.sudoplatform.sudodirelay.graphql.ListPostboxesForSudoIdQuery
-import com.sudoplatform.sudodirelay.graphql.SendInitMutation
-import com.sudoplatform.sudodirelay.graphql.StoreMessageMutation
-import com.sudoplatform.sudodirelay.graphql.type.CreatePostboxInput
-import com.sudoplatform.sudodirelay.graphql.type.Direction
-import com.sudoplatform.sudodirelay.graphql.type.IdAsInput
-import com.sudoplatform.sudodirelay.graphql.type.ListPostboxesForSudoIdInput
-import com.sudoplatform.sudodirelay.graphql.type.WriteToRelayInput
+import com.sudoplatform.sudodirelay.graphql.CreateRelayPostboxMutation
+import com.sudoplatform.sudodirelay.graphql.DeleteRelayMessageMutation
+import com.sudoplatform.sudodirelay.graphql.DeleteRelayPostboxMutation
+import com.sudoplatform.sudodirelay.graphql.ListRelayMessagesQuery
+import com.sudoplatform.sudodirelay.graphql.ListRelayPostboxesQuery
+import com.sudoplatform.sudodirelay.graphql.UpdateRelayPostboxMutation
+import com.sudoplatform.sudodirelay.graphql.type.CreateRelayPostboxInput
+import com.sudoplatform.sudodirelay.graphql.type.DeleteRelayMessageInput
+import com.sudoplatform.sudodirelay.graphql.type.DeleteRelayPostboxInput
+import com.sudoplatform.sudodirelay.graphql.type.UpdateRelayPostboxInput
 import com.sudoplatform.sudodirelay.logging.LogConstants
-import com.sudoplatform.sudodirelay.subscription.DIRelayEventSubscriber
-import com.sudoplatform.sudodirelay.subscription.DIRelayEventSubscriptionService
+import com.sudoplatform.sudodirelay.subscription.MessageSubscriber
+import com.sudoplatform.sudodirelay.subscription.SubscriptionService
+import com.sudoplatform.sudodirelay.types.ListOutput
+import com.sudoplatform.sudodirelay.types.Message
 import com.sudoplatform.sudodirelay.types.Postbox
-import com.sudoplatform.sudodirelay.types.RelayMessage
-import com.sudoplatform.sudodirelay.types.transformers.RelayMessageTransformer
+import com.sudoplatform.sudodirelay.types.transformers.MessageTransformer
+import com.sudoplatform.sudodirelay.types.transformers.PostboxTransformer
 import com.sudoplatform.sudologging.AndroidUtilsLogDriver
 import com.sudoplatform.sudologging.LogLevel
 import com.sudoplatform.sudologging.Logger
 import com.sudoplatform.sudouser.SudoUserClient
-import java.util.Date
-import java.util.Objects
-import java.util.UUID
 import java.util.concurrent.CancellationException
 
 /**
@@ -60,34 +59,39 @@ internal class DefaultSudoDIRelayClient(
     companion object {
 
         /** Exception message */
-        internal const val CREATE_POSTBOX_INVALID_ID_ERROR_MSG =
-            "The provided connectionId was invalid."
-        internal const val DELETE_POSTBOX_ERROR_MSG = "The postbox deletion failed."
+        internal const val INVALID_POSTBOX_INPUT_ERROR_MSG =
+            "The input provided to postbox creation was invalid."
+        internal const val DELETE_MESSAGE_ERROR_MSG = "The postbox deletion failed."
         internal const val UNAUTHORIZED_POSTBOX_ERROR_MSG =
-            "Access to the postbox with provided connectionId is unauthorized."
+            "Access to the postbox is unauthorized."
         private const val INVALID_TOKEN_MSG = "An invalid token error has occurred"
 
         /** Errors returned from the service */
         private const val ERROR_TYPE = "errorType"
         private const val SERVICE_ERROR = "sudoplatform.ServiceError"
         private const val INVALID_TOKEN_ERROR = "sudoplatform.InvalidTokenError"
-        private const val UNAUTHORIZED_POSTBOX_ERROR = "sudoplatform.relay.UnauthorizedPostboxAccess"
-        private const val INVALID_INIT_MESSAGE_ERROR = "sudoplatform.relay.InvalidInitMessage"
+        private const val INVALID_POSTBOX_INPUT_ERROR = "sudoplatform.relay.InvalidPostboxInputError"
+        private const val UNAUTHORIZED_POSTBOX_ERROR = "sudoplatform.relay.UnauthorizedPostboxAccessError"
     }
 
     private val relayEventSubscriptions =
-        DIRelayEventSubscriptionService(appSyncClient, logger)
+        SubscriptionService(appSyncClient, sudoUserClient, logger)
 
     @Throws(SudoDIRelayClient.DIRelayException::class)
-    override suspend fun createPostbox(connectionId: String, ownershipProofToken: String) {
+    override suspend fun createPostbox(
+        connectionId: String,
+        ownershipProofToken: String,
+        isEnabled: Boolean?
+    ): Postbox {
         try {
             val createPostboxInput =
-                CreatePostboxInput.builder()
+                CreateRelayPostboxInput.builder()
                     .connectionId(connectionId)
-                    .ownershipProofTokens(listOf(ownershipProofToken))
+                    .isEnabled(isEnabled ?: true)
+                    .ownershipProof(ownershipProofToken)
                     .build()
 
-            val mutation = SendInitMutation.builder()
+            val mutation = CreateRelayPostboxMutation.builder()
                 .input(createPostboxInput)
                 .build()
 
@@ -99,52 +103,40 @@ internal class DefaultSudoDIRelayClient(
                 throw interpretError(mutationResponse.errors().first())
             }
 
-            if (mutationResponse.data()?.sendInit() == null) {
-                throw SudoDIRelayClient.DIRelayException.FailedException()
-            }
+            val postbox = mutationResponse.data()?.createRelayPostbox()
+                ?: throw SudoDIRelayClient.DIRelayException.FailedException()
+
+            return PostboxTransformer.toEntity(postbox)
         } catch (e: Throwable) {
             logger.error("unexpected error $e")
             throw interpretException(e)
         }
     }
-
     @Throws(SudoDIRelayClient.DIRelayException::class)
-    override suspend fun storeMessage(
-        connectionId: String,
-        cipherText: String
-    ): RelayMessage {
+    override suspend fun updatePostbox(postboxId: String, isEnabled: Boolean?): Postbox {
         try {
-            val messageId = UUID.randomUUID().toString()
-            val currentDate = Date().time
-
-            val writeToRelay =
-                WriteToRelayInput.builder()
-                    .connectionId(connectionId)
-                    .messageId(messageId)
-                    .cipherText(cipherText)
-                    .direction(Direction.OUTBOUND)
-                    .utcTimestamp(currentDate.toDouble())
+            val updatePostboxInput =
+                UpdateRelayPostboxInput.builder()
+                    .postboxId(postboxId)
+                    .isEnabled(isEnabled)
                     .build()
 
-            val mutation = StoreMessageMutation.builder()
-                .input(writeToRelay)
+            val mutation = UpdateRelayPostboxMutation.builder()
+                .input(updatePostboxInput)
                 .build()
 
             val mutationResponse = appSyncClient.mutate(mutation)
                 .enqueue()
 
             if (mutationResponse.hasErrors()) {
-                logger.error("storeMessage errors = ${mutationResponse.errors()}")
+                logger.error("createPostbox errors = ${mutationResponse.errors()}")
                 throw interpretError(mutationResponse.errors().first())
             }
 
-            return RelayMessage(
-                messageId = messageId,
-                connectionId = connectionId,
-                cipherText = cipherText,
-                direction = RelayMessage.Direction.OUTBOUND,
-                timestamp = Date(currentDate)
-            )
+            val postbox = mutationResponse.data()?.updateRelayPostbox()
+                ?: throw SudoDIRelayClient.DIRelayException.FailedException()
+
+            return PostboxTransformer.toEntity(postbox)
         } catch (e: Throwable) {
             logger.error("unexpected error $e")
             throw interpretException(e)
@@ -152,11 +144,63 @@ internal class DefaultSudoDIRelayClient(
     }
 
     @Throws(SudoDIRelayClient.DIRelayException::class)
-    override suspend fun deletePostbox(connectionId: String) {
+    override suspend fun deletePostbox(postboxId: String): String {
         try {
-            val idAsInput = IdAsInput.builder().connectionId(connectionId).build()
+            val input = DeleteRelayPostboxInput.builder().postboxId(postboxId).build()
+            val mutation = DeleteRelayPostboxMutation.builder().input(input).build()
 
-            val mutation = DeletePostBoxMutation.builder().input(idAsInput).build()
+            val mutationResponse = appSyncClient.mutate(mutation)
+                .enqueue()
+
+            if (mutationResponse.hasErrors()) {
+                logger.error("deleteRelayPostbox errors = ${mutationResponse.errors()}")
+                val errorText = mutationResponse.errors().first().customAttributes()[ERROR_TYPE]?.toString() ?: ""
+                if (errorText.contains(UNAUTHORIZED_POSTBOX_ERROR)) {
+                    return postboxId
+                }
+                throw interpretError(mutationResponse.errors().first())
+            }
+
+            // As long as there were no errors, we can simply return the provided it
+            return postboxId
+        } catch (e: Throwable) {
+            logger.error("unexpected error $e")
+            throw interpretException(e)
+        }
+    }
+
+    override suspend fun listPostboxes(
+        limit: Int?,
+        nextToken: String?
+    ): ListOutput<Postbox> {
+        try {
+
+            val query = ListRelayPostboxesQuery.builder().limit(limit).nextToken(nextToken).build()
+
+            val queryResponse = appSyncClient.query(query)
+                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
+                .enqueueFirst()
+
+            if (queryResponse.hasErrors()) {
+                logger.error("getPostboxes errors = ${queryResponse.errors()}")
+                throw interpretError(queryResponse.errors().first())
+            }
+
+            val rawPostboxes = queryResponse.data()?.listRelayPostboxes()
+                ?: throw SudoDIRelayClient.DIRelayException.FailedException()
+
+            return PostboxTransformer.toEntityList(rawPostboxes)
+        } catch (e: Throwable) {
+            logger.error("unexpected error $e")
+            throw interpretException(e)
+        }
+    }
+
+    @Throws(SudoDIRelayClient.DIRelayException::class)
+    override suspend fun deleteMessage(messageId: String) {
+        try {
+            val deleteMessageInput = DeleteRelayMessageInput.builder().messageId(messageId).build()
+            val mutation = DeleteRelayMessageMutation.builder().input(deleteMessageInput).build()
 
             val mutationResponse = appSyncClient.mutate(mutation)
                 .enqueue()
@@ -166,38 +210,31 @@ internal class DefaultSudoDIRelayClient(
                 throw interpretError(mutationResponse.errors().first())
             }
 
-            val result = mutationResponse.data()?.deletePostBox()
-
-            if (result?.status() != 200) {
-                throw SudoDIRelayClient
-                    .DIRelayException.FailedException(DELETE_POSTBOX_ERROR_MSG)
-            }
+            val result = mutationResponse.data()?.deleteRelayMessage() ?: throw SudoDIRelayClient
+                .DIRelayException.FailedException(DELETE_MESSAGE_ERROR_MSG)
         } catch (e: Throwable) {
             logger.error("unexpected error $e")
             throw interpretException(e)
         }
     }
-
     @Throws(SudoDIRelayClient.DIRelayException::class)
-    override suspend fun listMessages(connectionId: String): List<RelayMessage> {
+    override suspend fun listMessages(limit: Int?, nextToken: String?): ListOutput<Message> {
         try {
-            val idAsInput = IdAsInput.builder().connectionId(connectionId).build()
-
-            val query = GetMessagesQuery.builder().input(idAsInput).build()
+            val query = ListRelayMessagesQuery.builder().limit(limit).nextToken(nextToken).build()
 
             val queryResponse = appSyncClient.query(query)
                 .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
                 .enqueueFirst()
 
             if (queryResponse.hasErrors()) {
-                logger.error("getMessages errors = ${queryResponse.errors()}")
+                logger.error("listMessages errors = ${queryResponse.errors()}")
                 throw interpretError(queryResponse.errors().first())
             }
 
-            val rawMessages = queryResponse.data()?.messages ?: emptyList()
+            val rawMessages = queryResponse.data()?.listRelayMessages()
+                ?: throw SudoDIRelayClient.DIRelayException.FailedException()
 
-            return RelayMessageTransformer.toEntityFromGetMessages(rawMessages)
-                .sortedBy { it.timestamp }
+            return MessageTransformer.toEntityList(rawMessages)
         } catch (e: Throwable) {
             logger.error("unexpected error $e")
             throw interpretException(e)
@@ -205,61 +242,21 @@ internal class DefaultSudoDIRelayClient(
     }
 
     override suspend fun subscribeToRelayEvents(
-        connectionId: String,
-        subscriber: DIRelayEventSubscriber
+        subscriberId: String,
+        subscriber: MessageSubscriber
     ) {
-        relayEventSubscriptions.subscribe(connectionId, subscriber)
+        relayEventSubscriptions.subscribe(subscriberId, subscriber)
     }
 
-    override suspend fun unsubscribeToRelayEvents(connectionId: String) {
-        relayEventSubscriptions.unsubscribe(connectionId)
+    override suspend fun unsubscribeToRelayEvents(subscriberId: String) {
+        relayEventSubscriptions.unsubscribe(subscriberId)
     }
 
     override suspend fun unsubscribeAll() {
         relayEventSubscriptions.unsubscribeAll()
     }
 
-    override fun getPostboxEndpoint(connectionId: String): String {
-        val baseEndpoint = DefaultSudoConfigManager(context, logger)
-            .getConfigSet("relayService")
-            ?.get("httpEndpoint") as String?
-
-        // should already be checked by Builder.
-        Objects.requireNonNull(
-            baseEndpoint,
-            "The parameter 'relayService.httpEndpoint' was not found in sudo configuration."
-        )
-
-        return "$baseEndpoint/$connectionId"
-    }
-
-    override suspend fun listPostboxesForSudoId(sudoId: String): List<Postbox> {
-        try {
-            val input = ListPostboxesForSudoIdInput.builder().sudoId(sudoId).build()
-
-            val query = ListPostboxesForSudoIdQuery.builder().input(input).build()
-
-            val queryResponse = appSyncClient.query(query)
-                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
-                .enqueueFirst()
-
-            if (queryResponse.hasErrors()) {
-                logger.error("getPostboxesForSudoId errors = ${queryResponse.errors()}")
-                throw interpretError(queryResponse.errors().first())
-            }
-
-            val rawPostboxes = queryResponse.data()?.listPostboxesForSudoId() ?: emptyList()
-
-            return RelayMessageTransformer.toEntityFromListPostboxesForSudoId(rawPostboxes)
-                .sortedBy { it.timestamp }
-        } catch (e: Throwable) {
-            logger.error("unexpected error $e")
-            throw interpretException(e)
-        }
-    }
-
     /** Private Methods */
-
     private fun interpretError(
         e: Error
     ): SudoDIRelayClient.DIRelayException {
@@ -275,17 +272,16 @@ internal class DefaultSudoDIRelayClient(
                         INVALID_TOKEN_MSG
                     )
             }
-            error.contains(INVALID_INIT_MESSAGE_ERROR) -> {
+            error.contains(INVALID_POSTBOX_INPUT_ERROR) -> {
                 return SudoDIRelayClient
-                    .DIRelayException.InvalidConnectionIDException(
-                        CREATE_POSTBOX_INVALID_ID_ERROR_MSG
+                    .DIRelayException.InvalidPostboxInputException(
+                        INVALID_POSTBOX_INPUT_ERROR_MSG
                     )
             }
             error.contains(UNAUTHORIZED_POSTBOX_ERROR) -> {
-                return SudoDIRelayClient
-                    .DIRelayException.UnauthorizedPostboxException(
-                        UNAUTHORIZED_POSTBOX_ERROR_MSG
-                    )
+                return UnauthorizedPostboxException(
+                    UNAUTHORIZED_POSTBOX_ERROR_MSG
+                )
             }
             else ->
                 return SudoDIRelayClient

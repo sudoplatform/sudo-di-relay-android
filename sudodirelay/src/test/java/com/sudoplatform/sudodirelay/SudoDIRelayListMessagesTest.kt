@@ -6,11 +6,11 @@ import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloHttpException
 import com.sudoplatform.sudodirelay.CommonData.forbiddenHTTPResponse
 import com.sudoplatform.sudodirelay.graphql.CallbackHolder
-import com.sudoplatform.sudodirelay.graphql.GetMessagesQuery
-import com.sudoplatform.sudodirelay.graphql.type.Direction
-import com.sudoplatform.sudodirelay.graphql.type.IdAsInput
-import com.sudoplatform.sudodirelay.types.RelayMessage
+import com.sudoplatform.sudodirelay.graphql.ListRelayMessagesQuery
+import com.sudoplatform.sudodirelay.graphql.ListRelayMessagesQuery.ListRelayMessages
+import com.sudoplatform.sudodirelay.types.transformers.toDate
 import com.sudoplatform.sudouser.SudoUserClient
+import io.kotlintest.matchers.collections.shouldHaveSize
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
 import io.kotlintest.shouldThrow
@@ -28,70 +28,97 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoMoreInteractions
-import java.util.Date
 
 /**
  * Test the correct operation of [SudoDIRelayClient.listMessages] using mocks and spies.
  */
 class SudoDIRelayListMessagesTest : BaseTests() {
 
-    private val queryInput by before {
-        IdAsInput.builder()
-            .connectionId("null")
-            .build()
-    }
+    private val queryInputLimit = 10
+    private val queryInputNextToken = "dummyToken"
 
     private val queryResult by before {
-        listOf(
-            GetMessagesQuery.GetMessage(
-                "",
-                "mid",
-                "cid",
-                "hello",
-                Direction.INBOUND,
-                (1_624_302_710_000).toDouble()
-            )
+        ListRelayMessages(
+            "",
+            listOf(
+                ListRelayMessagesQuery.Item(
+                    "message",
+                    "message-id",
+                    0.0,
+                    1.0,
+                    "dummyOwner",
+                    listOf(ListRelayMessagesQuery.Owner("", "sudoOwner", "sudoplatform.sudoservice")),
+                    "postbox-id",
+                    "this is a message",
+                )
+            ),
+            null
         )
+    }
+
+    private val queryResponse by before {
+        Response.builder<ListRelayMessagesQuery.Data>(ListRelayMessagesQuery(queryInputLimit, queryInputNextToken))
+            .data(ListRelayMessagesQuery.Data(queryResult))
+            .build()
     }
 
     private val queryResultMultiple by before {
-        listOf(
-            GetMessagesQuery.GetMessage(
-                "",
-                "001",
-                "123",
-                "hi",
-                Direction.INBOUND,
-                (1_623_302_710_000).toDouble()
+        ListRelayMessages(
+            "",
+            listOf(
+                ListRelayMessagesQuery.Item(
+                    "message",
+                    "message-id-1",
+                    0.0,
+                    1.0,
+                    "dummyOwner",
+                    listOf(
+                        ListRelayMessagesQuery.Owner("", "sudoOwner", "sudoplatform.sudoservice"),
+                        ListRelayMessagesQuery.Owner("", "otherOwner", "sudoplatform.not.sudoservice")
+                    ),
+                    "postbox-id",
+                    "this is a test message"
+                ),
+                ListRelayMessagesQuery.Item(
+                    "message",
+                    "message-id-2",
+                    2.0,
+                    3.0,
+                    "dummyOwner",
+                    listOf(
+                        ListRelayMessagesQuery.Owner("", "sudoOwner", "sudoplatform.sudoservice"),
+                        ListRelayMessagesQuery.Owner("", "otherOwner", "sudoplatform.not.sudoservice")
+                    ),
+                    "postbox-id",
+                    "this is a test message"
+                ),
+                ListRelayMessagesQuery.Item(
+                    "message",
+                    "message-id-3",
+                    4.0,
+                    5.0,
+                    "dummyOwner",
+                    listOf(
+                        ListRelayMessagesQuery.Owner("", "sudoOwner", "sudoplatform.sudoservice"),
+                        ListRelayMessagesQuery.Owner("", "otherOwner", "sudoplatform.not.sudoservice")
+                    ),
+                    "postbox-id",
+                    "this is a test message"
+                )
             ),
-            GetMessagesQuery.GetMessage(
-                "",
-                "002",
-                "123",
-                "bye",
-                Direction.OUTBOUND,
-                (1_622_342_710_000).toDouble()
-            ),
-            GetMessagesQuery.GetMessage(
-                "",
-                "003",
-                "123",
-                "hello world",
-                Direction.INBOUND,
-                (1_624_902_710_000).toDouble()
-            )
+            null
         )
     }
 
-    private val queryResultTimestampDate = Date(1624302710000)
-
-    private val queryResponse by before {
-        Response.builder<GetMessagesQuery.Data>(GetMessagesQuery(queryInput))
-            .data(GetMessagesQuery.Data(queryResult))
-            .build()
+    private val emptyQueryResult by before {
+        ListRelayMessages(
+            "",
+            listOf(),
+            null
+        )
     }
 
-    private val queryHolder = CallbackHolder<GetMessagesQuery.Data>()
+    private val queryHolder = CallbackHolder<ListRelayMessagesQuery.Data>()
 
     private val mockContext by before {
         mock<Context>()
@@ -99,7 +126,7 @@ class SudoDIRelayListMessagesTest : BaseTests() {
 
     private val mockAppSyncClient by before {
         mock<AWSAppSyncClient>().stub {
-            on { query(any<GetMessagesQuery>()) } doReturn queryHolder.queryOperation
+            on { query(any<ListRelayMessagesQuery>()) } doReturn queryHolder.queryOperation
         }
     }
 
@@ -129,12 +156,13 @@ class SudoDIRelayListMessagesTest : BaseTests() {
     }
 
     @Test
-    fun `listMessages(connectionID) should pass connectionID into the query`() = runBlocking<Unit> {
+    fun `listMessages should pass non-null parameters into the query`() = runBlocking<Unit> {
         queryHolder.callback shouldBe null
+        val limit = 6
+        val nextToken = "12345678"
 
-        val connectionId = "1234-1234-1234-1234"
         val deferredResult = async(Dispatchers.IO) {
-            client.listMessages(connectionId)
+            client.listMessages(limit, nextToken)
         }
 
         deferredResult.start()
@@ -143,11 +171,12 @@ class SudoDIRelayListMessagesTest : BaseTests() {
         queryHolder.callback?.onResponse(queryResponse)
         deferredResult.await()
 
-        val actualQueryInput = ArgumentCaptor.forClass(GetMessagesQuery::class.java)
+        val actualQueryInput = ArgumentCaptor.forClass(ListRelayMessagesQuery::class.java)
         verify(mockAppSyncClient).query(actualQueryInput.capture())
 
-        // verify input connectionID not changed
-        actualQueryInput.value.variables().input().connectionId() shouldBe connectionId
+        // verify input not changed
+        actualQueryInput.value.variables().limit() shouldBe limit
+        actualQueryInput.value.variables().nextToken() shouldBe nextToken
     }
 
     @Test
@@ -155,7 +184,7 @@ class SudoDIRelayListMessagesTest : BaseTests() {
         queryHolder.callback shouldBe null
 
         val deferredResult = async(Dispatchers.IO) {
-            client.listMessages("cid")
+            client.listMessages(queryInputLimit, queryInputNextToken)
         }
 
         deferredResult.start()
@@ -167,59 +196,86 @@ class SudoDIRelayListMessagesTest : BaseTests() {
         val result = deferredResult.await()
 
         result shouldNotBe null
-        result.size shouldBe 1
+        result.items.size shouldBe 1
+        result.nextToken shouldBe null
 
-        with(result[0]) {
-            messageId shouldBe "mid"
-            connectionId shouldBe "cid"
-            cipherText shouldBe "hello"
-            direction shouldBe RelayMessage.Direction.INBOUND
-            timestamp shouldBe queryResultTimestampDate
+        with(result.items[0]) {
+            id shouldBe "message-id"
+            postboxId shouldBe "postbox-id"
+            message shouldBe "this is a message"
+            createdAt shouldBe (0.0).toDate()
+            updatedAt shouldBe (1.0).toDate()
+            ownerId shouldBe "dummyOwner"
+            sudoId shouldBe "sudoOwner"
         }
 
-        verify(mockAppSyncClient).query(any<GetMessagesQuery>())
+        verify(mockAppSyncClient).query(any<ListRelayMessagesQuery>())
     }
 
     @Test
-    fun `listMessages() should return list in order of date`() =
-        runBlocking<Unit> {
-            queryHolder.callback shouldBe null
+    fun `listMessages() should return empty list for empty result`() = runBlocking<Unit> {
+        queryHolder.callback shouldBe null
 
-            val responseWithMultiple by before {
-                Response.builder<GetMessagesQuery.Data>(GetMessagesQuery(queryInput))
-                    .data(GetMessagesQuery.Data(queryResultMultiple))
-                    .build()
-            }
-
-            val deferredResult = async(Dispatchers.IO) {
-                client.listMessages("123")
-            }
-
-            deferredResult.start()
-
-            delay(100)
-            queryHolder.callback shouldNotBe null
-            queryHolder.callback?.onResponse(responseWithMultiple)
-
-            val result = deferredResult.await()
-
-            result shouldNotBe null
-            result.size shouldBe 3
-
-            result[0].messageId shouldBe "002"
-            result[1].messageId shouldBe "001"
-            result[2].messageId shouldBe "003"
-
-            verify(mockAppSyncClient).query(any<GetMessagesQuery>())
+        val nullResponse by before {
+            Response.builder<ListRelayMessagesQuery.Data>(
+                ListRelayMessagesQuery(
+                    queryInputLimit, queryInputNextToken
+                )
+            )
+                .data(ListRelayMessagesQuery.Data(emptyQueryResult))
+                .build()
         }
 
+        val deferredResult = async(Dispatchers.IO) {
+            client.listMessages(queryInputLimit, queryInputNextToken)
+        }
+
+        deferredResult.start()
+        delay(100)
+        queryHolder.callback shouldNotBe null
+        queryHolder.callback?.onResponse(nullResponse)
+        val result = deferredResult.await()
+
+        result.items shouldBe emptyList()
+
+        verify(mockAppSyncClient).query(any<ListRelayMessagesQuery>())
+    }
+
+    @Test
+    fun `listMessages() should return multiple entries list for multiple result`() = runBlocking<Unit> {
+        queryHolder.callback shouldBe null
+
+        val nullResponse by before {
+            Response.builder<ListRelayMessagesQuery.Data>(
+                ListRelayMessagesQuery(
+                    queryInputLimit, queryInputNextToken
+                )
+            )
+                .data(ListRelayMessagesQuery.Data(queryResultMultiple))
+                .build()
+        }
+
+        val deferredResult = async(Dispatchers.IO) {
+            client.listMessages(queryInputLimit, queryInputNextToken)
+        }
+
+        deferredResult.start()
+        delay(100)
+        queryHolder.callback shouldNotBe null
+        queryHolder.callback?.onResponse(nullResponse)
+        val result = deferredResult.await()
+
+        result.items shouldHaveSize 3
+
+        verify(mockAppSyncClient).query(any<ListRelayMessagesQuery>())
+    }
     @Test
     fun `listMessages() should throw when http error occurs`() = runBlocking<Unit> {
         queryHolder.callback shouldBe null
 
         val deferredResult = async(Dispatchers.IO) {
             shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
-                client.listMessages("cid")
+                client.listMessages(queryInputLimit, queryInputNextToken)
             }
         }
 
@@ -231,6 +287,6 @@ class SudoDIRelayListMessagesTest : BaseTests() {
 
         deferredResult.await()
 
-        verify(mockAppSyncClient).query(any<GetMessagesQuery>())
+        verify(mockAppSyncClient).query(any<ListRelayMessagesQuery>())
     }
 }

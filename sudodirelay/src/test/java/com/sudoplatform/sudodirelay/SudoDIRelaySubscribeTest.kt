@@ -5,12 +5,10 @@ import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
 import com.amazonaws.mobileconnectors.appsync.AppSyncSubscriptionCall
 import com.apollographql.apollo.api.Operation
 import com.apollographql.apollo.api.Subscription
-import com.sudoplatform.sudodirelay.graphql.OnMessageCreatedSubscription
-import com.sudoplatform.sudodirelay.graphql.OnPostBoxDeletedSubscription
-import com.sudoplatform.sudodirelay.graphql.type.Direction
-import com.sudoplatform.sudodirelay.subscription.DIRelayEventSubscriber
-import com.sudoplatform.sudodirelay.types.PostboxDeletionResult
-import com.sudoplatform.sudodirelay.types.RelayMessage
+import com.sudoplatform.sudodirelay.graphql.OnRelayMessageCreatedSubscription
+import com.sudoplatform.sudodirelay.subscription.MessageSubscriber
+import com.sudoplatform.sudodirelay.subscription.Subscriber
+import com.sudoplatform.sudodirelay.types.Message
 import com.sudoplatform.sudouser.SudoUserClient
 import io.kotlintest.shouldBe
 import kotlinx.coroutines.Dispatchers
@@ -35,16 +33,12 @@ import org.mockito.kotlin.verifyNoMoreInteractions
  */
 class SudoDIRelaySubscribeTest : BaseTests() {
 
-    private val subscriber = object : DIRelayEventSubscriber {
-        override fun messageIncoming(message: RelayMessage) {
+    private val subscriber = object : MessageSubscriber {
+        override fun messageCreated(message: Message) {
             println("nothing")
         }
 
-        override fun postBoxDeleted(update: PostboxDeletionResult) {
-            println("nothing")
-        }
-
-        override fun connectionStatusChanged(state: DIRelayEventSubscriber.ConnectionState) {
+        override fun connectionStatusChanged(state: Subscriber.ConnectionState) {
             println("nothing")
         }
     }
@@ -54,17 +48,12 @@ class SudoDIRelaySubscribeTest : BaseTests() {
     }
 
     private val mockMessageCreatedWatcher by before {
-        mock<AppSyncSubscriptionCall<OnMessageCreatedSubscription.Data>>()
-    }
-
-    private val mockPostboxDeletedWatcher by before {
-        mock<AppSyncSubscriptionCall<OnPostBoxDeletedSubscription.Data>>()
+        mock<AppSyncSubscriptionCall<OnRelayMessageCreatedSubscription.Data>>()
     }
 
     private val mockAppSyncClient by before {
         mock<AWSAppSyncClient>().stub {
-            on { subscribe(any<OnMessageCreatedSubscription>()) } doReturn mockMessageCreatedWatcher
-            on { subscribe(any<OnPostBoxDeletedSubscription>()) } doReturn mockPostboxDeletedWatcher
+            on { subscribe(any<OnRelayMessageCreatedSubscription>()) } doReturn mockMessageCreatedWatcher
         }
     }
 
@@ -94,7 +83,6 @@ class SudoDIRelaySubscribeTest : BaseTests() {
             mockContext,
             mockAppSyncClient,
             mockMessageCreatedWatcher,
-            mockPostboxDeletedWatcher
         )
     }
 
@@ -113,16 +101,13 @@ class SudoDIRelaySubscribeTest : BaseTests() {
             // check subscribe correct
             val subscriptionCaptor: KArgumentCaptor<Subscription<Operation.Data, Any, Operation.Variables>> =
                 argumentCaptor()
-            verify(mockAppSyncClient, times(2)).subscribe(subscriptionCaptor.capture())
+            verify(mockAppSyncClient, times(1)).subscribe(subscriptionCaptor.capture())
 
-            subscriptionCaptor.allValues.size shouldBe 2
+            subscriptionCaptor.allValues.size shouldBe 1
             with(subscriptionCaptor.allValues[0].variables().valueMap()) {
-                get("connectionId") shouldBe "123"
-                get("direction").toString() shouldBe Direction.INBOUND.toString()
+                get("owner") shouldBe "subject" // automatically retrieved from user client
             }
-            subscriptionCaptor.allValues[1].variables().valueMap()["connectionId"] shouldBe "123"
 
-            verify(mockMessageCreatedWatcher).execute(any<AppSyncSubscriptionCall.Callback<OnMessageCreatedSubscription.Data>>())
-            verify(mockPostboxDeletedWatcher).execute(any<AppSyncSubscriptionCall.Callback<OnPostBoxDeletedSubscription.Data>>())
+            verify(mockMessageCreatedWatcher).execute(any<AppSyncSubscriptionCall.Callback<OnRelayMessageCreatedSubscription.Data>>())
         }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2022 Anonyome Labs, Inc. All rights reserved.
+ * Copyright © 2023 Anonyome Labs, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -13,7 +13,10 @@ import com.sudoplatform.sudoprofiles.Sudo
  */
 object TestData {
 
-    val sudo = Sudo("Mr", "Theodore", "Bear", "Shopping", null, null)
+    val sudo = buildTestSudo("shopping")
 
     const val TWO_MINUTE_MS = 2 * 60 * 1000L
+    fun buildTestSudo(label: String = "Shopping"): Sudo {
+        return Sudo("Mr", "Theodore", "Bear", label, null, null)
+    }
 }

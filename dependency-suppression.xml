@@ -1,61 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
-    <suppress>
+    <suppress until="2023-12-31">
         <notes><![CDATA[
-            okhttp uses certificate pinning which some claim and others dispute can allow a man-in-the-middle attack
-            ]]></notes>
-        <cve>CVE-2018-20200</cve>
+         file name: aws-android-sdk-appsync-api-3.3.2.jar
+         Related to file path traversal.
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.amazonaws/aws\-android\-sdk\-appsync\-api@.*$
+        </packageUrl>
+        <cve>CVE-2015-10043</cve>
     </suppress>
-    <suppress until="2022-06-30">
+    <suppress until="2023-12-31">
         <notes><![CDATA[
-            Only trusted HTML/XML is processed using jsoup/dokka in this SDK. This suppression can be removed
-            when dokka updates their jsoup version to 1.14.2.
-            ]]></notes>
-        <cve>CVE-2021-37714</cve>
-    </suppress>
-    <suppress until="2022-06-30">
-        <notes><![CDATA[
-            com.google.protobuf:protobuf-java is only used internally (if at all) by android linting/code-analysis
-            tools.
-            ]]></notes>
-        <cve>CVE-2021-22569</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            Guava temporary file creation is not used in the Sudo Decentralized Identity Relay SDK.
-            ]]></notes>
-        <cve>CVE-2020-8908</cve>
-    </suppress>
-
-    <suppress until="2022-06-30">
-        <notes><![CDATA[
-            Unrelated JetBrains Multiplatform Gradle Project vulnerability.
-            ]]></notes>
-        <cve>CVE-2022-24329</cve>
-    </suppress>
-    <suppress until="2022-06-30">
-        <notes><![CDATA[
-            Only trusted (internal) data is processed using dokka/jackson-binding in this SDK. This suppression
-            can be removed when dokka updates their jackson-binding version to 2.13.0+.
-            ]]></notes>
-        <cve>CVE-2020-36518</cve>
-    </suppress>
-    <suppress>
-        <notes>
-            <![CDATA[
-            vulnerability is in log4j SMTP appender dependency of kotlin-analysis-intellij - this is a gradle plugin.
-            ]]>
-        </notes>
-        <cve>CVE-2022-23307</cve>
-        <cve>CVE-2020-9488</cve>
-        <cve>CVE-2019-17571</cve>
-        <cve>CVE-2020-9493</cve>
-    </suppress>
-    <suppress until="2022-06-30">
-        <notes><![CDATA[
-        file name: junit-4.12.jar
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/junit/junit@.*$</packageUrl>
-        <cve>CVE-2020-15250</cve>
+         file name: aws-android-sdk-appsync-runtime-3.3.2.jar
+         Related to file path traversal.
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.amazonaws/aws\-android\-sdk\-appsync\-runtime@.*$
+        </packageUrl>
+        <cve>CVE-2015-10043</cve>
     </suppress>
 </suppressions>

@@ -3,9 +3,9 @@
 Sudo Platform Decentralized Identity Relay SDK for Android. 
 
 With this SDK you can:
- * Initialize and delete relay postboxes
- * Store and retrieve incoming/outgoing messages to the postbox
- * subscribe to receive notification of incoming messages
+ * Create, update and delete relay postboxes
+ * Retrieve messages from the postbox
+ * Subscribe to receive notification of new messages
 
 # Package com.sudoplatform.sudodirelay
 

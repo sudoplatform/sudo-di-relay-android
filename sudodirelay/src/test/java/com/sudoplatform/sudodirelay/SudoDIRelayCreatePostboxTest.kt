@@ -6,8 +6,9 @@ import com.apollographql.apollo.api.Error
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloHttpException
 import com.sudoplatform.sudodirelay.graphql.CallbackHolder
-import com.sudoplatform.sudodirelay.graphql.SendInitMutation
-import com.sudoplatform.sudodirelay.graphql.type.CreatePostboxInput
+import com.sudoplatform.sudodirelay.graphql.CreateRelayPostboxMutation
+import com.sudoplatform.sudodirelay.graphql.CreateRelayPostboxMutation.Owner
+import com.sudoplatform.sudodirelay.graphql.type.CreateRelayPostboxInput
 import com.sudoplatform.sudouser.SudoUserClient
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
@@ -33,33 +34,39 @@ import org.mockito.kotlin.verifyNoMoreInteractions
  */
 class SudoDIRelayCreatePostboxTest : BaseTests() {
 
-    private val connectionID = "62b39ef6-510f-4150-83e7-3ab4e71bffd8"
+    private val connectionId = "62b39ef6-510f-4150-83e7-3ab4e71bffd8"
 
     private val ownershipProofToken = "eyJlYXN0ZXItZWdnIjogIndvYSwgbmljZSBkZWNvZGluZyBza2lsbHMgOjAgQikifQ=="
 
     private val mutationInput by before {
-        CreatePostboxInput.builder()
-            .connectionId("cid")
-            .ownershipProofTokens(listOf(ownershipProofToken))
+        CreateRelayPostboxInput.builder()
+            .connectionId(connectionId)
+            .isEnabled(true)
+            .ownershipProof(ownershipProofToken)
             .build()
     }
 
     private val mutationResult by before {
-        SendInitMutation.SendInit(
+        CreateRelayPostboxMutation.CreateRelayPostbox(
             "typename",
-            "mid",
-            "cid",
-            (1_624_302_710_000).toDouble()
+            "postboxId",
+            0.0,
+            1.0,
+            "dummyOwner",
+            listOf(Owner("owner", "dummySudoOwner", "sudoplatform.sudoservice")),
+            connectionId,
+            true,
+            "https://service.endpoint.test/this-should-be-our-connection-id"
         )
     }
 
     private val mutationResponse by before {
-        Response.builder<SendInitMutation.Data>(SendInitMutation(mutationInput))
-            .data(SendInitMutation.Data(mutationResult))
+        Response.builder<CreateRelayPostboxMutation.Data>(CreateRelayPostboxMutation(mutationInput))
+            .data(CreateRelayPostboxMutation.Data(mutationResult))
             .build()
     }
 
-    private val mutationHolder = CallbackHolder<SendInitMutation.Data>()
+    private val mutationHolder = CallbackHolder<CreateRelayPostboxMutation.Data>()
 
     private val mockContext by before {
         mock<Context>()
@@ -67,7 +74,7 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
 
     private val mockAppSyncClient by before {
         mock<AWSAppSyncClient>().stub {
-            on { mutate(any<SendInitMutation>()) } doReturn mutationHolder.mutationOperation
+            on { mutate(any<CreateRelayPostboxMutation>()) } doReturn mutationHolder.mutationOperation
         }
     }
 
@@ -103,7 +110,7 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
             mutationHolder.callback shouldBe null
 
             val deferredResult = async(Dispatchers.IO) {
-                client.createPostbox(connectionID, ownershipProofToken)
+                client.createPostbox(connectionId, ownershipProofToken)
             }
 
             deferredResult.start()
@@ -113,42 +120,41 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
             mutationHolder.callback?.onResponse(mutationResponse)
             deferredResult.await()
 
-            val actualMutationInput = ArgumentCaptor.forClass(SendInitMutation::class.java)
+            val actualMutationInput = ArgumentCaptor.forClass(CreateRelayPostboxMutation::class.java)
             verify(mockAppSyncClient).mutate(actualMutationInput.capture())
             with(actualMutationInput.value.variables().input()) {
-                connectionId() shouldBe connectionID
-                ownershipProofTokens() shouldBe listOf(ownershipProofToken)
+                connectionId() shouldBe connectionId
+                ownershipProof() shouldBe ownershipProofToken
+                isEnabled shouldBe true
             }
         }
 
     @Test
-    fun `createPostbox() should throw with invalid connectionID`() = runBlocking<Unit> {
-        val invalidConnectionID = "aaaaaaa-bbbbbbbbbb-cccccc"
-
+    fun `createPostbox() should throw with invalid postbox input error`() = runBlocking<Unit> {
         val deferredResult = async(Dispatchers.IO) {
-            shouldThrow<SudoDIRelayClient.DIRelayException.InvalidConnectionIDException> {
-                client.createPostbox(invalidConnectionID, ownershipProofToken)
+            shouldThrow<SudoDIRelayClient.DIRelayException.InvalidPostboxInputException> {
+                client.createPostbox("connection-id", ownershipProofToken)
             }
         }
 
-        val invalidInitError =
-            Error("mock", emptyList(), mapOf("errorType" to "sudoplatform.relay.InvalidInitMessage"))
+        val duplicatePostboxIdError =
+            Error("mock", emptyList(), mapOf("errorType" to "sudoplatform.relay.InvalidPostboxInputError"))
 
-        val mutationResponseInvalidInitError by before {
-            Response.builder<SendInitMutation.Data>(SendInitMutation(mutationInput))
+        val mutationResponseDuplicateConnectionIdError by before {
+            Response.builder<CreateRelayPostboxMutation.Data>(CreateRelayPostboxMutation(mutationInput))
                 .data(null)
-                .errors(mutableListOf(invalidInitError))
+                .errors(mutableListOf(duplicatePostboxIdError))
                 .build()
         }
 
         deferredResult.start()
         delay(100)
 
-        mutationHolder.callback?.onResponse(mutationResponseInvalidInitError)
+        mutationHolder.callback?.onResponse(mutationResponseDuplicateConnectionIdError)
 
         deferredResult.await()
 
-        verify(mockAppSyncClient).mutate(any<SendInitMutation>())
+        verify(mockAppSyncClient).mutate(any<CreateRelayPostboxMutation>())
     }
 
     @Test
@@ -156,12 +162,12 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
 
         val deferredResult = async(Dispatchers.IO) {
             shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
-                client.createPostbox(connectionID, ownershipProofToken)
+                client.createPostbox(connectionId, ownershipProofToken)
             }
         }
 
         val mutationResponseNullData by before {
-            Response.builder<SendInitMutation.Data>(SendInitMutation(mutationInput))
+            Response.builder<CreateRelayPostboxMutation.Data>(CreateRelayPostboxMutation(mutationInput))
                 .data(null)
                 .build()
         }
@@ -173,16 +179,14 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
 
         deferredResult.await()
 
-        verify(mockAppSyncClient).mutate(any<SendInitMutation>())
+        verify(mockAppSyncClient).mutate(any<CreateRelayPostboxMutation>())
     }
 
     @Test
     fun `createPostbox() should throw on invalid token error`() = runBlocking<Unit> {
-        val invalidOwnershipProofToken = "abcdef"
-
         val deferredResult = async(Dispatchers.IO) {
             shouldThrow<SudoDIRelayClient.DIRelayException.InvalidTokenException> {
-                client.createPostbox(connectionID, invalidOwnershipProofToken)
+                client.createPostbox(connectionId, "invalid-ownership-proof")
             }
         }
 
@@ -190,7 +194,7 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
             Error("mock", emptyList(), mapOf("errorType" to "sudoplatform.InvalidTokenError"))
 
         val mutationResponseInvalidTokenError by before {
-            Response.builder<SendInitMutation.Data>(SendInitMutation(mutationInput))
+            Response.builder<CreateRelayPostboxMutation.Data>(CreateRelayPostboxMutation(mutationInput))
                 .data(null)
                 .errors(mutableListOf(invalidTokenError))
                 .build()
@@ -203,7 +207,7 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
 
         deferredResult.await()
 
-        verify(mockAppSyncClient).mutate(any<SendInitMutation>())
+        verify(mockAppSyncClient).mutate(any<CreateRelayPostboxMutation>())
     }
 
     @Test
@@ -212,7 +216,7 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
 
         val deferredResult = async(Dispatchers.IO) {
             shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
-                client.createPostbox(connectionID, ownershipProofToken)
+                client.createPostbox(connectionId, ownershipProofToken)
             }
         }
 
@@ -224,7 +228,7 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
 
         deferredResult.await()
 
-        verify(mockAppSyncClient).mutate(any<SendInitMutation>())
+        verify(mockAppSyncClient).mutate(any<CreateRelayPostboxMutation>())
     }
 
     @Test
@@ -232,7 +236,7 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
         mutationHolder.callback shouldBe null
 
         mockAppSyncClient.stub {
-            on { mutate(any<SendInitMutation>()) } doThrow RuntimeException("Mock runtime error")
+            on { mutate(any<CreateRelayPostboxMutation>()) } doThrow RuntimeException("Mock runtime error")
         }
 
         val deferredResult = async(Dispatchers.IO) {
@@ -246,6 +250,6 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
 
         deferredResult.await()
 
-        verify(mockAppSyncClient).mutate(any<SendInitMutation>())
+        verify(mockAppSyncClient).mutate(any<CreateRelayPostboxMutation>())
     }
 }

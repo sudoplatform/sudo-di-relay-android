@@ -2,11 +2,12 @@ package com.sudoplatform.sudodirelay
 
 import android.content.Context
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
+import com.apollographql.apollo.api.Error
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloHttpException
 import com.sudoplatform.sudodirelay.graphql.CallbackHolder
-import com.sudoplatform.sudodirelay.graphql.DeletePostBoxMutation
-import com.sudoplatform.sudodirelay.graphql.type.IdAsInput
+import com.sudoplatform.sudodirelay.graphql.DeleteRelayPostboxMutation
+import com.sudoplatform.sudodirelay.graphql.type.DeleteRelayPostboxInput
 import com.sudoplatform.sudouser.SudoUserClient
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
@@ -33,25 +34,25 @@ import kotlin.RuntimeException
  */
 class SudoDIRelayDeletePostboxTest : BaseTests() {
     private val mutationInput by before {
-        IdAsInput.builder()
-            .connectionId("cid")
+        DeleteRelayPostboxInput.builder()
+            .postboxId("postbox-id")
             .build()
     }
 
     private val mutationResult by before {
-        DeletePostBoxMutation.DeletePostBox(
+        DeleteRelayPostboxMutation.DeleteRelayPostbox(
             "typename",
-            200
+            "postbox-id"
         )
     }
 
     private val mutationResponse by before {
-        Response.builder<DeletePostBoxMutation.Data>(DeletePostBoxMutation(mutationInput))
-            .data(DeletePostBoxMutation.Data(mutationResult))
+        Response.builder<DeleteRelayPostboxMutation.Data>(DeleteRelayPostboxMutation(mutationInput))
+            .data(DeleteRelayPostboxMutation.Data(mutationResult))
             .build()
     }
 
-    private val mutationHolder = CallbackHolder<DeletePostBoxMutation.Data>()
+    private val mutationHolder = CallbackHolder<DeleteRelayPostboxMutation.Data>()
 
     private val mockContext by before {
         mock<Context>()
@@ -59,7 +60,7 @@ class SudoDIRelayDeletePostboxTest : BaseTests() {
 
     private val mockAppSyncClient by before {
         mock<AWSAppSyncClient>().stub {
-            on { mutate(any<DeletePostBoxMutation>()) } doReturn mutationHolder.mutationOperation
+            on { mutate(any<DeleteRelayPostboxMutation>()) } doReturn mutationHolder.mutationOperation
         }
     }
 
@@ -93,10 +94,10 @@ class SudoDIRelayDeletePostboxTest : BaseTests() {
         runBlocking<Unit> {
             mutationHolder.callback shouldBe null
 
-            val connectionID = "1234-1234-1234-1234"
+            val postboxId = "1234-1234-1234-1234"
 
             val deferredResult = async(Dispatchers.IO) {
-                client.deletePostbox(connectionID)
+                client.deletePostbox(postboxId)
             }
 
             deferredResult.start()
@@ -106,18 +107,18 @@ class SudoDIRelayDeletePostboxTest : BaseTests() {
             mutationHolder.callback?.onResponse(mutationResponse)
             deferredResult.await()
 
-            val actualMutationInput = ArgumentCaptor.forClass(DeletePostBoxMutation::class.java)
+            val actualMutationInput = ArgumentCaptor.forClass(DeleteRelayPostboxMutation::class.java)
             verify(mockAppSyncClient).mutate(actualMutationInput.capture())
-            actualMutationInput.value.variables().input().connectionId() shouldBe connectionID
+            actualMutationInput.value.variables().input().postboxId() shouldBe postboxId
         }
 
     @Test
-    fun `deletePostbox() should pass through on normal input and 200 response`() =
+    fun `deletePostbox() should invoke appSync client`() =
         runBlocking<Unit> {
             mutationHolder.callback shouldBe null
 
             val deferredResult = async(Dispatchers.IO) {
-                client.deletePostbox("123")
+                client.deletePostbox("postbox-id")
             }
 
             deferredResult.start()
@@ -127,24 +128,22 @@ class SudoDIRelayDeletePostboxTest : BaseTests() {
             mutationHolder.callback?.onResponse(mutationResponse)
             deferredResult.await()
 
-            verify(mockAppSyncClient).mutate(any<DeletePostBoxMutation>())
+            verify(mockAppSyncClient).mutate(any<DeleteRelayPostboxMutation>())
         }
 
     @Test
-    fun `deletePostbox() should throw on null response`() = runBlocking<Unit> {
+    fun `deletePostbox() should not throw on null response`() = runBlocking<Unit> {
         mutationHolder.callback shouldBe null
 
+        val postboxId = "postbox-id"
         val badMutationResponse by before {
-            Response.builder<DeletePostBoxMutation.Data>(DeletePostBoxMutation(mutationInput))
+            Response.builder<DeleteRelayPostboxMutation.Data>(DeleteRelayPostboxMutation(mutationInput))
                 .data(null)
                 .build()
         }
 
         val deferredResult = async(Dispatchers.IO) {
-
-            shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
-                client.deletePostbox("123")
-            }
+            client.deletePostbox(postboxId)
         }
 
         deferredResult.start()
@@ -152,45 +151,40 @@ class SudoDIRelayDeletePostboxTest : BaseTests() {
 
         mutationHolder.callback shouldNotBe null
         mutationHolder.callback?.onResponse(badMutationResponse)
-        deferredResult.await()
+        val result = deferredResult.await()
 
-        verify(mockAppSyncClient).mutate(any<DeletePostBoxMutation>())
+        verify(mockAppSyncClient).mutate(any<DeleteRelayPostboxMutation>())
+        result shouldBe postboxId
     }
 
     @Test
-    fun `deletePostbox() should throw on not 200 response`() =
-        runBlocking<Unit> {
-            mutationHolder.callback shouldBe null
+    fun `deletePostbox() should not throw on UnauthorizedPostboxAccess response`() = runBlocking<Unit> {
+        mutationHolder.callback shouldBe null
 
-            val badMutationResult by before {
-                DeletePostBoxMutation.DeletePostBox(
-                    "typename",
-                    403
-                )
-            }
-
-            val badMutationResponse by before {
-                Response.builder<DeletePostBoxMutation.Data>(DeletePostBoxMutation(mutationInput))
-                    .data(DeletePostBoxMutation.Data(badMutationResult))
-                    .build()
-            }
-
-            val deferredResult = async(Dispatchers.IO) {
-
-                shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
-                    client.deletePostbox("123")
-                }
-            }
-
-            deferredResult.start()
-            delay(100)
-
-            mutationHolder.callback shouldNotBe null
-            mutationHolder.callback?.onResponse(badMutationResponse)
-            deferredResult.await()
-
-            verify(mockAppSyncClient).mutate(any<DeletePostBoxMutation>())
+        val postboxId = "postbox-id"
+        val unauthorizedAccessError =
+            Error("mock", emptyList(), mapOf("errorType" to "sudoplatform.relay.UnauthorizedPostboxAccessError"))
+        val badMutationResponse by before {
+            Response.builder<DeleteRelayPostboxMutation.Data>(DeleteRelayPostboxMutation(mutationInput))
+                .data(null)
+                .errors(mutableListOf(unauthorizedAccessError))
+                .build()
         }
+
+        val deferredResult = async(Dispatchers.IO) {
+            client.deletePostbox(postboxId)
+        }
+
+        deferredResult.start()
+        delay(100)
+
+        mutationHolder.callback shouldNotBe null
+        mutationHolder.callback?.onResponse(badMutationResponse)
+        val result = deferredResult.await()
+
+        verify(mockAppSyncClient).mutate(any<DeleteRelayPostboxMutation>())
+        result shouldBe postboxId
+    }
 
     @Test
     fun `deletePostbox() should throw on apollo http error`() = runBlocking<Unit> {
@@ -198,7 +192,7 @@ class SudoDIRelayDeletePostboxTest : BaseTests() {
 
         val deferredResult = async(Dispatchers.IO) {
             shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
-                client.deletePostbox("123")
+                client.deletePostbox("postbox-id")
             }
         }
 
@@ -210,7 +204,7 @@ class SudoDIRelayDeletePostboxTest : BaseTests() {
 
         deferredResult.await()
 
-        verify(mockAppSyncClient).mutate(any<DeletePostBoxMutation>())
+        verify(mockAppSyncClient).mutate(any<DeleteRelayPostboxMutation>())
     }
 
     @Test
@@ -218,12 +212,12 @@ class SudoDIRelayDeletePostboxTest : BaseTests() {
         mutationHolder.callback shouldBe null
 
         mockAppSyncClient.stub {
-            on { mutate(any<DeletePostBoxMutation>()) } doThrow RuntimeException("Mock runtime error")
+            on { mutate(any<DeleteRelayPostboxMutation>()) } doThrow RuntimeException("Mock runtime error")
         }
 
         val deferredResult = async(Dispatchers.IO) {
             shouldThrow<SudoDIRelayClient.DIRelayException.UnknownException> {
-                client.deletePostbox("123")
+                client.deletePostbox("postbox-id")
             }
         }
 
@@ -232,6 +226,6 @@ class SudoDIRelayDeletePostboxTest : BaseTests() {
 
         deferredResult.await()
 
-        verify(mockAppSyncClient).mutate(any<DeletePostBoxMutation>())
+        verify(mockAppSyncClient).mutate(any<DeleteRelayPostboxMutation>())
     }
 }
