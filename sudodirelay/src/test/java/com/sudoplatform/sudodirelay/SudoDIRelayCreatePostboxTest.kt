@@ -106,7 +106,6 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
     @Test
     fun `createPostbox(variables) should pass variables correctly into mutation input`() =
         runBlocking<Unit> {
-
             mutationHolder.callback shouldBe null
 
             val deferredResult = async(Dispatchers.IO) {
@@ -159,7 +158,6 @@ class SudoDIRelayCreatePostboxTest : BaseTests() {
 
     @Test
     fun `createPostbox() should throw generic on null response no errors`() = runBlocking<Unit> {
-
         val deferredResult = async(Dispatchers.IO) {
             shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
                 client.createPostbox(connectionId, ownershipProofToken)

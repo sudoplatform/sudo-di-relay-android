@@ -29,5 +29,5 @@ data class Postbox(
     val sudoId: String,
     val connectionId: String,
     val isEnabled: Boolean,
-    val serviceEndpoint: String,
+    val serviceEndpoint: String
 )

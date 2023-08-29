@@ -173,6 +173,14 @@ interface SudoDIRelayClient {
     suspend fun deleteMessage(messageId: String)
 
     /**
+     * Request deletion of messages with IDs [messageIds].
+     *
+     * @param messageIds [List<String>] the message identifiers to be deleted.
+     */
+    @Throws(DIRelayException::class)
+    suspend fun bulkDeleteMessage(messageIds: List<String>)
+
+    /**
      * Gets a list of at most limit [Message]s for the current user.
      *
      * @param limit [Int?] the maximum number of messages to retrieve.
@@ -219,7 +227,7 @@ interface SudoDIRelayClient {
 suspend fun SudoDIRelayClient.subscribeToRelayEvents(
     subscriberId: String,
     onConnectionChange: (status: Subscriber.ConnectionState) -> Unit = {},
-    messageCreated: (relayMessage: Message) -> Unit,
+    messageCreated: (relayMessage: Message) -> Unit
 ) =
     subscribeToRelayEvents(
         subscriberId,

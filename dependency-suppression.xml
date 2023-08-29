@@ -18,4 +18,22 @@
         </packageUrl>
         <cve>CVE-2015-10043</cve>
     </suppress>
+    <suppress until="2023-12-31">
+        <notes><![CDATA[
+         file name: okio-jvm-3.2.0.jar
+         description: GzipSource does not handle an exception that might be raised when parsing a malformed gzip buffer. This may lead to denial of service of the Okio client when handling a crafted GZIP archive, by using the GzipSource class.
+         reason for suppression: DoS attack from unzipping a malformed gzip data stream. The affected component is Okio which is only used by the AWS SDK. We will only be using this SDK to download data from trusted sources.
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.squareup\.okio/okio\-jvm@.*$</packageUrl>
+        <cve>CVE-2023-3635</cve>
+    </suppress>
+    <suppress until="2023-12-31">
+        <notes><![CDATA[
+         file name: okio-metadata-3.2.0-all.jar
+         description: GzipSource does not handle an exception that might be raised when parsing a malformed gzip buffer. This may lead to denial of service of the Okio client when handling a crafted GZIP archive, by using the GzipSource class.
+         reason for suppression: DoS attack from unzipping a malformed gzip data stream. The affected component is Okio which is only used by the AWS SDK. We will only be using this SDK to download data from trusted sources.
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.squareup\.okio/okio@.*$</packageUrl>
+        <cve>CVE-2023-3635</cve>
+    </suppress>
 </suppressions>

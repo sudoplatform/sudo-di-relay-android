@@ -53,7 +53,6 @@ class SudoDIRelayClientSystemTest : BaseSystemTest() {
 
     @Before
     fun init() = runBlocking<Unit> {
-
         Timber.plant(Timber.DebugTree())
 
         if (verbose) {
@@ -68,6 +67,9 @@ class SudoDIRelayClientSystemTest : BaseSystemTest() {
             .setSudoUserClient(userClient)
             .setLogger(logger)
             .build()
+
+        // clear data from previously failed runs
+        userClient.reset()
     }
 
     @After
@@ -76,6 +78,7 @@ class SudoDIRelayClientSystemTest : BaseSystemTest() {
             deregister()
         }
         sudoClient.reset()
+        userClient.reset()
 
         Timber.uprootAll()
     }
@@ -90,7 +93,6 @@ class SudoDIRelayClientSystemTest : BaseSystemTest() {
 
     @Test
     fun shouldNotThrowIfTheRequiredItemsAreProvidedToBuilder() {
-
         SudoDIRelayClient.builder()
             .setContext(context)
             .setSudoUserClient(userClient)
@@ -201,7 +203,7 @@ class SudoDIRelayClientSystemTest : BaseSystemTest() {
                 if (it.postboxId == postbox1.id) {
                     incomingPostbox1Messages.add(it)
                 }
-            },
+            }
         )
 
         // subscribe to events for postbox 2
@@ -212,7 +214,7 @@ class SudoDIRelayClientSystemTest : BaseSystemTest() {
                 if (it.postboxId == postbox2.id) {
                     incomingPostbox2Messages.add(it)
                 }
-            },
+            }
         )
 
         delay(2000)

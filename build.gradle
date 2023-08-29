@@ -1,9 +1,9 @@
 buildscript {
-    ext.kotlin_version = '1.7.20'
+    ext.kotlin_version = '1.8.20'
     ext.plugin_version = '2.2.0'
-    ext.appsync_version = '3.3.2'
-    ext.aws_version = "2.62.0"
-    ext.dokka_version = '1.7.20'
+    ext.appsync_version = '3.4.0'
+    ext.aws_version = "2.72.0"
+    ext.dokka_version = '1.8.10'
     ext.jacoco_version = "0.8.8"
 
     repositories {
@@ -13,20 +13,19 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:4.2.2"
+        classpath "com.android.tools.build:gradle:8.0.2"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.owasp:dependency-check-gradle:6.5.3"
+        classpath "org.owasp:dependency-check-gradle:8.2.1"
         classpath "com.cookpad.android.licensetools:license-tools-plugin:1.7.0"
-        classpath "org.jmailen.gradle:kotlinter-gradle:3.9.0"
+        classpath "org.jmailen.gradle:kotlinter-gradle:3.13.0"
         classpath "com.amazonaws:aws-android-sdk-appsync-gradle-plugin:$appsync_version"
-        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.3"
+        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:4.0.0.2929"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:${dokka_version}"
-        classpath "org.jsoup:jsoup:1.14.3"
     }
 }
 
 plugins {
-    id "io.github.gradle-nexus.publish-plugin" version "1.1.0"
+    id "io.github.gradle-nexus.publish-plugin" version "1.3.0"
 }
 
 ext {
@@ -44,6 +43,18 @@ else {
     ext["internalReleaseRepoUrl"] = ""
     ext["internalReleaseRepoName"] = ""
     ext["sonatypeStagingProfileId"] = ""
+}
+
+if (project.hasProperty("ossIndexUsername")) {
+    ext["ossIndexUsername"] = "$ossIndexUsername"
+} else {
+    ext["ossIndexUsername"] = ""
+}
+
+if (project.hasProperty("ossIndexPassword")) {
+    ext["ossIndexPassword"] = "$ossIndexPassword"
+} else {
+    ext["ossIndexPassword"] = ""
 }
 
 if (project.findProperty("tag") && sonatypeStagingProfileId) {

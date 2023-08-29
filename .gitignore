@@ -35,6 +35,9 @@ build/
 # gradle
 .gradle
 
+# node
+node_modules/
+
 # debug file for credentials. This will be different on each machine
 config.properties
 

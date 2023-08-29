@@ -34,7 +34,7 @@ internal object MessageTransformer {
             sudoId = newMessage.owners().find { it.issuer() == "sudoplatform.sudoservice" }?.id()
                 ?: throw SudoDIRelayClient.DIRelayException.FailedException(),
             postboxId = newMessage.postboxId(),
-            message = newMessage.message(),
+            message = newMessage.message()
         )
     }
 

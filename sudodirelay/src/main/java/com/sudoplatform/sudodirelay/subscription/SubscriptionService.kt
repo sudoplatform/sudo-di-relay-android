@@ -57,14 +57,12 @@ internal class SubscriptionService(
         id: String,
         subscriber: MessageSubscriber
     ) {
-
         val userSubject = userClient.getSubject()
             ?: throw SudoDIRelayClient.DIRelayException.AuthenticationException(ERROR_UNAUTHENTICATED_MSG)
 
         messageCreatedSubscriptionManager.replaceSubscriber(id, subscriber)
 
         scope.launch {
-
             if (messageCreatedSubscriptionManager.watcher == null) {
                 val watcher = appSyncClient.subscribe(
                     OnRelayMessageCreatedSubscription.builder()
@@ -97,7 +95,7 @@ internal class SubscriptionService(
         override fun onFailure(e: ApolloException) {
             logger.error("OnMessageCreated subscription error $e")
             messageCreatedSubscriptionManager.connectionStatusChanged(
-                Subscriber.ConnectionState.DISCONNECTED,
+                Subscriber.ConnectionState.DISCONNECTED
             )
         }
 
@@ -115,7 +113,7 @@ internal class SubscriptionService(
 
         override fun onCompleted() {
             messageCreatedSubscriptionManager.connectionStatusChanged(
-                Subscriber.ConnectionState.DISCONNECTED,
+                Subscriber.ConnectionState.DISCONNECTED
             )
         }
     }

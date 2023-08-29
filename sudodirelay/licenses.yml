@@ -155,12 +155,12 @@
   license: The Apache Software License, Version 2.0
   licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
   url: http://developer.android.com/tools/extras/support-library.html
-- artifact: androidx.annotation:annotation:+
+- artifact: androidx.annotation:annotation-jvm:+
   name: Android Support Library Annotations
   copyrightHolder: Google, Inc.
   license: The Apache Software License, Version 2.0
   licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
-  url: http://developer.android.com/tools/extras/support-library.html
+  url: https://developer.android.com/jetpack/androidx/releases/annotation#1.6.0
 - artifact: androidx.savedstate:savedstate:+
   name: Activity
   copyrightHolder: Google, Inc.
@@ -269,7 +269,7 @@
   license: The Apache Software License, Version 2.0
   licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
   url: https://developer.android.com/jetpack/androidx
-- artifact: com.squareup.okio:okio:+
+- artifact: com.squareup.okio:okio-jvm:+
   name: Okio
   copyrightHolder: Square, Inc.
   license: The Apache Software License, Version 2.0
@@ -287,12 +287,6 @@
   license: The Apache Software License, Version 2.0
   licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
   url: https://developer.android.com/jetpack/androidx
-- artifact: org.bouncycastle:bctls-jdk15to18:+
-  name: Bouncy Castle JSSE provider and TLS/DTLS API
-  copyrightHolder: The JSR-330 Expert Group
-  license: Bouncy Castle Licence
-  licenseUrl: http://www.bouncycastle.org/licence.html
-  url: http://www.bouncycastle.org/java.html
 - artifact: com.amazonaws:aws-android-sdk-kms:+
   name: AWS SDK for Android - AWS KMS
   copyrightHolder: Amazon
@@ -310,12 +304,6 @@
   license: The Apache Software License, Version 2.0
   licenseUrl: https://www.apache.org/licenses/LICENSE-2.0.txt
   url: https://github.com/Kotlin/kotlinx.serialization
-- artifact: org.bouncycastle:bcprov-jdk15to18:+
-  name: Bouncy Castle Provider
-  copyrightHolder: The JSR-330 Expert Group
-  license: Bouncy Castle Licence
-  licenseUrl: http://www.bouncycastle.org/licence.html
-  url: http://www.bouncycastle.org/java.html
 - artifact: org.jetbrains.kotlin:kotlin-stdlib-jdk8:+
   name: Kotlin Stdlib Jdk8
   copyrightHolder: JetBrains, Inc.
@@ -333,12 +321,6 @@
   license: BSD License
   licenseUrl: https://opensource.org/licenses/BSD-3-Clause
   url: http://hamcrest.org
-- artifact: com.jakewharton.timber:timber:+
-  name: Timber
-  copyrightHolder: Jake Wharton
-  license: The Apache Software License, Version 2.0
-  licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.txt
-  url: https://github.com/JakeWharton/timber
 - artifact: junit:junit:+
   name: JUnit
   copyrightHolder: JUnit
@@ -351,18 +333,6 @@
   license: The Apache Software License, Version 2.0
   licenseUrl: https://www.apache.org/licenses/LICENSE-2.0.txt
   url: https://github.com/appmattus/certificatetransparency
-- artifact: org.bouncycastle:bcutil-jdk15to18:+
-  name: Bouncy Castle ASN.1 Extension and Utility APIs
-  copyrightHolder: The JSR-330 Expert Group
-  license: Bouncy Castle Licence
-  licenseUrl: http://www.bouncycastle.org/licence.html
-  url: http://www.bouncycastle.org/java.html
-- artifact: org.bouncycastle:bcpkix-jdk15to18:+
-  name: Bouncy Castle PKIX, CMS, EAC, TSP, PKCS, OCSP, CMP, and CRMF APIs
-  copyrightHolder: The JSR-330 Expert Group
-  license: Bouncy Castle Licence
-  licenseUrl: http://www.bouncycastle.org/licence.html
-  url: http://www.bouncycastle.org/java.html
 - artifact: com.madgag.spongycastle:bcpkix-jdk15on:+
   name: Spongy Castle
   copyrightHolder: The JSR-330 Expert Group

@@ -101,7 +101,6 @@ class SudoDIRelayUpdatePostboxTest : BaseTests() {
     @Test
     fun `UpdatePostbox(variables) should pass variables correctly into mutation input`() =
         runBlocking<Unit> {
-
             val postboxId = "postbox-id"
             val enabled = true
             mutationHolder.callback shouldBe null
@@ -128,7 +127,6 @@ class SudoDIRelayUpdatePostboxTest : BaseTests() {
     @Test
     fun `UpdatePostbox(variables) should pass nullable variables correctly into mutation input`() =
         runBlocking<Unit> {
-
             val postboxId = "postbox-id"
             val enabled = null
             mutationHolder.callback shouldBe null
@@ -182,7 +180,6 @@ class SudoDIRelayUpdatePostboxTest : BaseTests() {
 
     @Test
     fun `UpdatePostbox() should throw generic on null response no errors`() = runBlocking<Unit> {
-
         val deferredResult = async(Dispatchers.IO) {
             shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
                 client.updatePostbox("postbox-id", null)

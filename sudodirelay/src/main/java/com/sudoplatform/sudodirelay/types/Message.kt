@@ -27,5 +27,5 @@ data class Message(
     val ownerId: String,
     val sudoId: String,
     val postboxId: String,
-    val message: String,
+    val message: String
 )

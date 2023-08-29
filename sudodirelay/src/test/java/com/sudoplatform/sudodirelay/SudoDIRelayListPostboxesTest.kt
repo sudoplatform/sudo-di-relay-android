@@ -188,7 +188,8 @@ class SudoDIRelayListPostboxesTest : BaseTests() {
         val nullResponse by before {
             Response.builder<ListRelayPostboxesQuery.Data>(
                 ListRelayPostboxesQuery(
-                    queryInputLimit, queryInputNextToken
+                    queryInputLimit,
+                    queryInputNextToken
                 )
             )
                 .data(ListRelayPostboxesQuery.Data(emptyQueryResult))
@@ -217,7 +218,8 @@ class SudoDIRelayListPostboxesTest : BaseTests() {
         val nullResponse by before {
             Response.builder<ListRelayPostboxesQuery.Data>(
                 ListRelayPostboxesQuery(
-                    queryInputLimit, queryInputNextToken
+                    queryInputLimit,
+                    queryInputNextToken
                 )
             )
                 .data(ListRelayPostboxesQuery.Data(queryResultMultiple))

@@ -9,13 +9,14 @@ node {
 }
 
 android {
-    compileSdkVersion 31
+    namespace 'com.sudoplatform.sudodirelay'
+    compileSdk 33
 
     defaultConfig {
-        minSdkVersion 24
-        targetSdkVersion 31
+        minSdkVersion 26
+        targetSdkVersion 33
         versionCode = 1
-        versionName = "3.0.0"
+        versionName = "3.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testApplicationId = "com.sudoplatform.sudodirelay.test"
         consumerProguardFiles 'consumer-rules.pro'
@@ -31,11 +32,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility 1.8
-        targetCompatibility 1.8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = 17
     }
 
     resourcePrefix 'sen_'
@@ -61,13 +62,12 @@ android {
 }
 
 ext {
-    coroutine_version = "1.6.4"
+    coroutine_version = "1.7.1"
     kotlintest_version = "3.4.2"
 }
 
 dependencies {
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutine_version"
 
@@ -84,13 +84,13 @@ dependencies {
         }
     }
     // Sudo Platform
-    implementation "com.sudoplatform:sudokeymanager:5.2.0"
-    implementation "com.sudoplatform:sudologging:2.1.0"
-    implementation "com.sudoplatform:sudoconfigmanager:4.0.0"
-    implementation "com.sudoplatform:sudouser:15.0.0"
-    implementation "com.sudoplatform:sudoapiclient:6.0.0"
+    implementation "com.sudoplatform:sudokeymanager:6.0.0"
+    implementation "com.sudoplatform:sudologging:3.0.0"
+    implementation "com.sudoplatform:sudoconfigmanager:6.0.0"
+    implementation "com.sudoplatform:sudouser:17.0.0"
+    implementation "com.sudoplatform:sudoapiclient:8.0.0"
     implementation "com.sudoplatform:sudoprofiles:11.0.1"
-    implementation 'com.sudoplatform:sudoentitlements:6.0.1'
+    implementation 'com.sudoplatform:sudoentitlements:8.0.1'
     // Included as a resolution to fix a CVE. Junit is a transitive of a
     // spongeycastle library from sudokeymanager.
     // TOOD: Can and should be moved to testImplementation once
@@ -103,17 +103,17 @@ dependencies {
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutine_version"
     testImplementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     testImplementation "org.mockito:mockito-core:4.7.0"
-    testImplementation "org.mockito.kotlin:mockito-kotlin:4.0.0"
+    testImplementation "org.mockito.kotlin:mockito-kotlin:4.1.0"
     testImplementation "androidx.test:core:1.5.0"
-    testImplementation 'org.robolectric:robolectric:4.8.2'
-    testImplementation "com.jakewharton.timber:timber:4.7.1"
+    testImplementation 'org.robolectric:robolectric:4.9'
+    testImplementation "com.jakewharton.timber:timber:5.0.1"
     testImplementation 'com.android.support.test:runner:1.0.2'
 
     androidTestImplementation "androidx.test.ext:junit:1.1.5"
     androidTestImplementation "androidx.test:runner:1.5.2"
     androidTestImplementation "androidx.test:core:1.5.0"
     androidTestImplementation "io.kotlintest:kotlintest-assertions:$kotlintest_version"
-    androidTestImplementation "com.jakewharton.timber:timber:4.7.1"
+    androidTestImplementation "com.jakewharton.timber:timber:5.0.1"
     androidTestImplementation "org.awaitility:awaitility:3.1.6"
     androidTestImplementation "com.sudoplatform:sudoentitlementsadmin:4.0.0"
 
@@ -148,6 +148,22 @@ afterEvaluate {
         suppressionFile file("../dependency-suppression.xml").toString()
         failBuildOnCVSS 0
         skipConfigurations = getConfigurationsToSkip(configurations)
+
+        cve {
+            urlModified = "https://anonyome-nist-cve-mirror.s3.amazonaws.com/nvdcve-1.1-modified.json.gz"
+            urlBase = "https://anonyome-nist-cve-mirror.s3.amazonaws.com/nvdcve-1.1-%d.json.gz"
+            startYear = 2002
+            waitTime = 0
+        }
+
+        analyzers {
+            assemblyEnabled = false
+            ossIndex {
+                username = "${ossIndexUsername}"
+                password = "${ossIndexPassword}"
+                warnOnlyOnRemoteErrors = true
+            }
+        }
     }
 }
 
@@ -225,8 +241,12 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "testDebugUnitTest") {
     // TODO - *.exec file should be generated to buildDir dir, not projectDir
     executionData.setFrom(fileTree(["dir": "$projectDir", "includes": ["**/*.exec", "**/*.ec"]]))
     reports {
-        xml.enabled = true
-        html.enabled = true
+        xml {
+            required.set(true)
+        }
+        html {
+            required.set(true)
+        }
     }
 }
 

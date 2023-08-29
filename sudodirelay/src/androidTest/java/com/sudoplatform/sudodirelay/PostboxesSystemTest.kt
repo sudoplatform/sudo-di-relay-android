@@ -49,7 +49,6 @@ class PostboxesSystemTest : BaseSystemTest() {
 
     @Before
     fun init() = runBlocking<Unit> {
-
         Timber.plant(Timber.DebugTree())
 
         if (verbose) {
@@ -64,6 +63,9 @@ class PostboxesSystemTest : BaseSystemTest() {
             .setSudoUserClient(userClient)
             .setLogger(logger)
             .build()
+
+        // clear data from previously failed runs
+        userClient.reset()
     }
 
     @After
@@ -72,6 +74,7 @@ class PostboxesSystemTest : BaseSystemTest() {
             deregister()
         }
         sudoClient.reset()
+        userClient.reset()
 
         Timber.uprootAll()
     }

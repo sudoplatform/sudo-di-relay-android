@@ -49,7 +49,7 @@ class SudoDIRelayListMessagesTest : BaseTests() {
                     "dummyOwner",
                     listOf(ListRelayMessagesQuery.Owner("", "sudoOwner", "sudoplatform.sudoservice")),
                     "postbox-id",
-                    "this is a message",
+                    "this is a message"
                 )
             ),
             null
@@ -219,7 +219,8 @@ class SudoDIRelayListMessagesTest : BaseTests() {
         val nullResponse by before {
             Response.builder<ListRelayMessagesQuery.Data>(
                 ListRelayMessagesQuery(
-                    queryInputLimit, queryInputNextToken
+                    queryInputLimit,
+                    queryInputNextToken
                 )
             )
                 .data(ListRelayMessagesQuery.Data(emptyQueryResult))
@@ -248,7 +249,8 @@ class SudoDIRelayListMessagesTest : BaseTests() {
         val nullResponse by before {
             Response.builder<ListRelayMessagesQuery.Data>(
                 ListRelayMessagesQuery(
-                    queryInputLimit, queryInputNextToken
+                    queryInputLimit,
+                    queryInputNextToken
                 )
             )
                 .data(ListRelayMessagesQuery.Data(queryResultMultiple))
@@ -269,6 +271,7 @@ class SudoDIRelayListMessagesTest : BaseTests() {
 
         verify(mockAppSyncClient).query(any<ListRelayMessagesQuery>())
     }
+
     @Test
     fun `listMessages() should throw when http error occurs`() = runBlocking<Unit> {
         queryHolder.callback shouldBe null

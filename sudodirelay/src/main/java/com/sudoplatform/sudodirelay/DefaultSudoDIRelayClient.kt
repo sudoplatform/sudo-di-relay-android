@@ -14,12 +14,14 @@ import com.apollographql.apollo.exception.ApolloException
 import com.sudoplatform.sudodirelay.SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException
 import com.sudoplatform.sudodirelay.appsync.enqueue
 import com.sudoplatform.sudodirelay.appsync.enqueueFirst
+import com.sudoplatform.sudodirelay.graphql.BulkDeleteRelayMessageMutation
 import com.sudoplatform.sudodirelay.graphql.CreateRelayPostboxMutation
 import com.sudoplatform.sudodirelay.graphql.DeleteRelayMessageMutation
 import com.sudoplatform.sudodirelay.graphql.DeleteRelayPostboxMutation
 import com.sudoplatform.sudodirelay.graphql.ListRelayMessagesQuery
 import com.sudoplatform.sudodirelay.graphql.ListRelayPostboxesQuery
 import com.sudoplatform.sudodirelay.graphql.UpdateRelayPostboxMutation
+import com.sudoplatform.sudodirelay.graphql.type.BulkDeleteRelayMessageInput
 import com.sudoplatform.sudodirelay.graphql.type.CreateRelayPostboxInput
 import com.sudoplatform.sudodirelay.graphql.type.DeleteRelayMessageInput
 import com.sudoplatform.sudodirelay.graphql.type.DeleteRelayPostboxInput
@@ -52,7 +54,8 @@ internal class DefaultSudoDIRelayClient(
     private val appSyncClient: AWSAppSyncClient,
     private val sudoUserClient: SudoUserClient,
     private val logger: Logger = Logger(
-        LogConstants.SUDOLOG_TAG, AndroidUtilsLogDriver(LogLevel.INFO)
+        LogConstants.SUDOLOG_TAG,
+        AndroidUtilsLogDriver(LogLevel.INFO)
     )
 ) : SudoDIRelayClient {
 
@@ -112,6 +115,7 @@ internal class DefaultSudoDIRelayClient(
             throw interpretException(e)
         }
     }
+
     @Throws(SudoDIRelayClient.DIRelayException::class)
     override suspend fun updatePostbox(postboxId: String, isEnabled: Boolean?): Postbox {
         try {
@@ -174,7 +178,6 @@ internal class DefaultSudoDIRelayClient(
         nextToken: String?
     ): ListOutput<Postbox> {
         try {
-
             val query = ListRelayPostboxesQuery.builder().limit(limit).nextToken(nextToken).build()
 
             val queryResponse = appSyncClient.query(query)
@@ -217,6 +220,29 @@ internal class DefaultSudoDIRelayClient(
             throw interpretException(e)
         }
     }
+
+    @Throws(SudoDIRelayClient.DIRelayException::class)
+    override suspend fun bulkDeleteMessage(messageIds: List<String>) {
+        try {
+            val bulkDeleteMessageInput = BulkDeleteRelayMessageInput.builder().messageIds(messageIds).build()
+            val mutation = BulkDeleteRelayMessageMutation.builder().input(bulkDeleteMessageInput).build()
+
+            val mutationResponse = appSyncClient.mutate(mutation)
+                .enqueue()
+
+            if (mutationResponse.hasErrors()) {
+                logger.error("bulkDeleteMessage errors = ${mutationResponse.errors()}")
+                throw interpretError(mutationResponse.errors().first())
+            }
+
+            val result = mutationResponse.data()?.bulkDeleteRelayMessage() ?: throw SudoDIRelayClient
+                .DIRelayException.FailedException(DELETE_MESSAGE_ERROR_MSG)
+        } catch (e: Throwable) {
+            logger.error("unexpected error $e")
+            throw interpretException(e)
+        }
+    }
+
     @Throws(SudoDIRelayClient.DIRelayException::class)
     override suspend fun listMessages(limit: Int?, nextToken: String?): ListOutput<Message> {
         try {

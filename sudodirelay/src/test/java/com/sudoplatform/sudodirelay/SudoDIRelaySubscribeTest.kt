@@ -82,7 +82,7 @@ class SudoDIRelaySubscribeTest : BaseTests() {
         verifyNoMoreInteractions(
             mockContext,
             mockAppSyncClient,
-            mockMessageCreatedWatcher,
+            mockMessageCreatedWatcher
         )
     }
 

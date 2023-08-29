@@ -59,7 +59,6 @@ class MessagesSystemTest : BaseSystemTest() {
 
     @Before
     fun init() = runBlocking<Unit> {
-
         Timber.plant(Timber.DebugTree())
 
         if (verbose) {
@@ -74,6 +73,9 @@ class MessagesSystemTest : BaseSystemTest() {
             .setSudoUserClient(userClient)
             .setLogger(logger)
             .build()
+
+        // clear data from previously failed runs
+        userClient.reset()
     }
 
     @After
@@ -82,6 +84,7 @@ class MessagesSystemTest : BaseSystemTest() {
             deregister()
         }
         sudoClient.reset()
+        userClient.reset()
 
         Timber.uprootAll()
     }
@@ -197,6 +200,73 @@ class MessagesSystemTest : BaseSystemTest() {
     }
 
     @Test
+    fun bulkDeleteMessagesShouldDelete() = runBlocking {
+        registerSignInAndEntitle()
+
+        val connectionId = UUID.randomUUID().toString()
+        val postbox = sudoDIRelayClient.createPostbox(connectionId, ownershipProof)
+
+        if (!postMessageToEndpoint("hi", postbox.serviceEndpoint)) {
+            fail("http post response with code other than 200..")
+        }
+
+        if (!postMessageToEndpoint("there", postbox.serviceEndpoint)) {
+            fail("http post response with code other than 200..")
+        }
+
+        if (!postMessageToEndpoint("general", postbox.serviceEndpoint)) {
+            fail("http post response with code other than 200..")
+        }
+
+        val messages = getAllMessagesForPostbox(sudoDIRelayClient, postbox.id)
+
+        with(messages[0]) {
+            try {
+                UUID.fromString(id)
+            } catch (e: IllegalArgumentException) {
+                fail("UUID passed into stored messages is not valid")
+            }
+            postboxId shouldBe postbox.id
+            message shouldBe "hi"
+            createdAt.after(Date(Date().time - TWO_MINUTE_MS)) shouldBe true
+        }
+
+        with(messages[1]) {
+            try {
+                UUID.fromString(id)
+            } catch (e: IllegalArgumentException) {
+                fail("UUID passed into stored messages is not valid")
+            }
+            postboxId shouldBe postbox.id
+            message shouldBe "there"
+            createdAt.after(Date(Date().time - TWO_MINUTE_MS)) shouldBe true
+        }
+
+        with(messages[2]) {
+            try {
+                UUID.fromString(id)
+            } catch (e: IllegalArgumentException) {
+                fail("UUID passed into stored messages is not valid")
+            }
+            postboxId shouldBe postbox.id
+            message shouldBe "general"
+            createdAt.after(Date(Date().time - TWO_MINUTE_MS)) shouldBe true
+        }
+
+        sudoDIRelayClient.bulkDeleteMessage(listOf(messages[0].id, messages[2].id))
+
+        Awaitility.await()
+            .atMost(20, TimeUnit.SECONDS)
+            .pollInterval(1, TimeUnit.SECONDS)
+            .until {
+                runBlocking {
+                    val messagesAfterDeletion = getAllMessagesForPostbox(sudoDIRelayClient, postbox.id)
+                    messagesAfterDeletion == listOf(messages[1])
+                }
+            }
+    }
+
+    @Test
     fun listMessagesShouldHonourDefaultPagination() = runBlocking<Unit> {
         registerSignInAndEntitle()
 
@@ -277,11 +347,11 @@ class MessagesSystemTest : BaseSystemTest() {
 
         sudoDIRelayClient.subscribeToRelayEvents(
             "subscriber-id-1",
-            messageCreated = { messageList1.add(it) },
+            messageCreated = { messageList1.add(it) }
         )
         sudoDIRelayClient.subscribeToRelayEvents(
             "subscriber-id-2",
-            messageCreated = { messageList2.add(it) },
+            messageCreated = { messageList2.add(it) }
         )
 
         delay(2000)
@@ -332,7 +402,7 @@ class MessagesSystemTest : BaseSystemTest() {
 
         sudoDIRelayClient.subscribeToRelayEvents(
             subscriberId,
-            messageCreated = { messageList1.add(it) },
+            messageCreated = { messageList1.add(it) }
         )
 
         delay(1000)
@@ -352,7 +422,7 @@ class MessagesSystemTest : BaseSystemTest() {
 
         sudoDIRelayClient.subscribeToRelayEvents(
             subscriberId,
-            messageCreated = { messageList2.add(it) },
+            messageCreated = { messageList2.add(it) }
         )
 
         if (!postMessageToEndpoint("hello 2", postbox.serviceEndpoint)) {
@@ -385,7 +455,7 @@ class MessagesSystemTest : BaseSystemTest() {
         sudoDIRelayClient.subscribeToRelayEvents(
             subscriberId,
             {},
-            { subscriber1Notification = true },
+            { subscriber1Notification = true }
         )
 
         delay(1000)
@@ -412,7 +482,7 @@ class MessagesSystemTest : BaseSystemTest() {
         sudoDIRelayClient.subscribeToRelayEvents(
             subscriberId,
             {},
-            { subscriber1Notification = true },
+            { subscriber1Notification = true }
         )
 
         delay(1000)
@@ -446,12 +516,12 @@ class MessagesSystemTest : BaseSystemTest() {
 
         sudoDIRelayClient.subscribeToRelayEvents(
             subscriberId1,
-            messageCreated = { subscriber1Notification = true },
+            messageCreated = { subscriber1Notification = true }
         )
 
         sudoDIRelayClient.subscribeToRelayEvents(
             subscriberId2,
-            messageCreated = { subscriber2Notification = true },
+            messageCreated = { subscriber2Notification = true }
         )
 
         delay(2000)
