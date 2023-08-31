@@ -63,13 +63,15 @@ internal class SubscriptionService(
         messageCreatedSubscriptionManager.replaceSubscriber(id, subscriber)
 
         scope.launch {
-            if (messageCreatedSubscriptionManager.watcher == null) {
+            if (messageCreatedSubscriptionManager.watcher == null &&
+                messageCreatedSubscriptionManager.pendingWatcher == null
+            ) {
                 val watcher = appSyncClient.subscribe(
                     OnRelayMessageCreatedSubscription.builder()
                         .owner(userSubject)
                         .build()
                 )
-                messageCreatedSubscriptionManager.watcher = watcher
+                messageCreatedSubscriptionManager.pendingWatcher = watcher
                 watcher.execute(
                     MessageCreatedCallback()
                 )
@@ -91,7 +93,7 @@ internal class SubscriptionService(
     }
 
     private inner class MessageCreatedCallback :
-        AppSyncSubscriptionCall.Callback<OnRelayMessageCreatedSubscription.Data> {
+        AppSyncSubscriptionCall.StartedCallback<OnRelayMessageCreatedSubscription.Data> {
         override fun onFailure(e: ApolloException) {
             logger.error("OnMessageCreated subscription error $e")
             messageCreatedSubscriptionManager.connectionStatusChanged(
@@ -115,6 +117,11 @@ internal class SubscriptionService(
             messageCreatedSubscriptionManager.connectionStatusChanged(
                 Subscriber.ConnectionState.DISCONNECTED
             )
+        }
+
+        override fun onStarted() {
+            messageCreatedSubscriptionManager.watcher = messageCreatedSubscriptionManager.pendingWatcher
+            messageCreatedSubscriptionManager.connectionStatusChanged(Subscriber.ConnectionState.CONNECTED)
         }
     }
 }
