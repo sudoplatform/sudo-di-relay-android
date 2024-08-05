@@ -7,8 +7,8 @@ Please see the [Sudo Platform Developer Docs](https://docs.sudoplatform.com) for
 ## Version Support
 | Technology             | Supported version |
 | ---------------------- | ----------------- |
-| Min. Deployment Target | 26               |
-| Kotlin version         | 1.8+              |
+| Min. Deployment Target | 26                |
+| Kotlin version         | 1.9+              |
 
 ## Integration Instructions
 Visit the [Decentralized Identity Relay section](https://docs.sudoplatform.com/guides/decentralized-identity) of the Sudo Platform Developer Docs for SDK integration instructions.

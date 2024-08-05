@@ -14,9 +14,9 @@ android {
 
     defaultConfig {
         minSdkVersion 26
-        targetSdkVersion 33
+        targetSdkVersion 34
         versionCode = 1
-        versionName = "3.1.1"
+        versionName = "4.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testApplicationId = "com.sudoplatform.sudodirelay.test"
         consumerProguardFiles 'consumer-rules.pro'
@@ -36,7 +36,7 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = 17
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     resourcePrefix 'sen_'
@@ -167,8 +167,7 @@ afterEvaluate {
     }
 }
 
-// https://github.com/cookpad/license-tools-plugin
-apply plugin: "com.cookpad.android.licensetools"
+apply plugin: "com.cookpad.android.plugin.license-tools"
 licenseTools {
     licensesYaml = file("licenses.yml")
     ignoredGroups = ["com.nhaarman:mockito-kotlin", "com.anonyome", "com.sudoplatform"]
@@ -179,7 +178,7 @@ licenseTools {
 // Yaml parser
 import org.yaml.snakeyaml.Yaml
 
-task checkLicenseHaveRequiredFields {
+tasks.register('checkLicenseHaveRequiredFields') {
     description = "Check every license entry has the mandatory fields"
     group = "verification"
 
@@ -226,7 +225,8 @@ jacoco {
     toolVersion = "$jacoco_version"
 }
 
-task jacocoTestReport(type: JacocoReport, dependsOn: "testDebugUnitTest") {
+tasks.register('jacocoTestReport', JacocoReport) {
+    dependsOn "testDebugUnitTest"
     group = "Reporting"
     description = "Generate Jacoco coverage reports"
     classDirectories.setFrom(fileTree(

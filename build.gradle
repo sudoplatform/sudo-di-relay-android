@@ -1,9 +1,9 @@
 buildscript {
-    ext.kotlin_version = '1.8.20'
+    ext.kotlin_version = '1.9.21'
     ext.plugin_version = '2.2.0'
     ext.appsync_version = '3.4.0'
     ext.aws_version = "2.72.0"
-    ext.dokka_version = '1.8.10'
+    ext.dokka_version = '1.9.20'
     ext.jacoco_version = "0.8.8"
 
     repositories {
@@ -13,14 +13,19 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:8.0.2"
+        classpath "com.android.tools.build:gradle:8.5.0"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.owasp:dependency-check-gradle:8.2.1"
-        classpath "com.cookpad.android.licensetools:license-tools-plugin:1.7.0"
+        classpath "gradle.plugin.com.cookpad.android.plugin:plugin:1.2.8"
         classpath "org.jmailen.gradle:kotlinter-gradle:3.13.0"
         classpath "com.amazonaws:aws-android-sdk-appsync-gradle-plugin:$appsync_version"
         classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:4.0.0.2929"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:${dokka_version}"
+        classpath ("com.squareup.moshi:moshi") {
+            version {
+                strictly '1.8.0'
+            }
+        }
     }
 }
 
@@ -101,6 +106,6 @@ allprojects {
     }
 }
 
-task clean(type: Delete) {
+tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }
