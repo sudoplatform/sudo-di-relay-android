@@ -64,7 +64,7 @@ interface PropertyResetter {
     @get:Rule
     val reset: PropertyResetRule
 
-    fun <T> before(initializer: () -> T) = reset.before(initializer)
+    fun <T> before(initializer: () -> T): PropertyResetDelegate<T> = reset.before(initializer)
 }
 
 class ActualPropertyResetter : PropertyResetter {

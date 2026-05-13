@@ -7,7 +7,6 @@
 package com.sudoplatform.sudodirelay
 
 import android.content.Context
-import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
 import com.sudoplatform.sudoapiclient.ApiClientManager
 import com.sudoplatform.sudodirelay.logging.LogConstants
 import com.sudoplatform.sudodirelay.subscription.MessageSubscriber
@@ -19,6 +18,7 @@ import com.sudoplatform.sudologging.AndroidUtilsLogDriver
 import com.sudoplatform.sudologging.LogLevel
 import com.sudoplatform.sudologging.Logger
 import com.sudoplatform.sudouser.SudoUserClient
+import com.sudoplatform.sudouser.amplify.GraphQLClient
 import java.util.Objects
 
 /**
@@ -36,7 +36,7 @@ interface SudoDIRelayClient {
     class Builder internal constructor() {
         private var context: Context? = null
         private var sudoUserClient: SudoUserClient? = null
-        private var appSyncClient: AWSAppSyncClient? = null
+        private var graphQLClient: GraphQLClient? = null
         private var logger: Logger =
             Logger(LogConstants.SUDOLOG_TAG, AndroidUtilsLogDriver(LogLevel.INFO))
 
@@ -56,12 +56,12 @@ interface SudoDIRelayClient {
         }
 
         /**
-         * Provide an [AWSAppSyncClient] for the [SudoDIRelayClient] to use
-         * (optional input). If this is not supplied, an [AWSAppSyncClient] will
+         * Provide a [GraphQLClient] for the [SudoDIRelayClient] to use
+         * (optional input). If this is not supplied, a [GraphQLClient] will
          * be constructed and used.
          */
-        fun setAppSyncClient(appSyncClient: AWSAppSyncClient) = also {
-            this.appSyncClient = appSyncClient
+        fun setGraphQLClient(graphQLClient: GraphQLClient) = also {
+            this.graphQLClient = graphQLClient
         }
 
         /**
@@ -81,16 +81,16 @@ interface SudoDIRelayClient {
             Objects.requireNonNull(context, "Context must be provided.")
             Objects.requireNonNull(sudoUserClient, "SudoUserClient must be provided.")
 
-            val appSyncClient = appSyncClient ?: ApiClientManager.getClient(
+            val graphQLClient = graphQLClient ?: ApiClientManager.getClient(
                 this@Builder.context!!,
-                this@Builder.sudoUserClient!!
+                this@Builder.sudoUserClient!!,
             )
 
             return DefaultSudoDIRelayClient(
                 context = context!!,
-                appSyncClient = appSyncClient,
+                graphQLClient = graphQLClient,
                 sudoUserClient = sudoUserClient!!,
-                logger = logger
+                logger = logger,
             )
         }
     }
@@ -103,7 +103,7 @@ interface SudoDIRelayClient {
      */
     sealed class DIRelayException(
         message: String? = null,
-        cause: Throwable? = null
+        cause: Throwable? = null,
     ) : RuntimeException(message, cause) {
         class FailedException(message: String? = null, cause: Throwable? = null) :
             DIRelayException(message = message, cause = cause)
@@ -199,7 +199,7 @@ interface SudoDIRelayClient {
      */
     suspend fun subscribeToRelayEvents(
         subscriberId: String,
-        subscriber: MessageSubscriber
+        subscriber: MessageSubscriber,
     )
 
     /**
@@ -227,7 +227,7 @@ interface SudoDIRelayClient {
 suspend fun SudoDIRelayClient.subscribeToRelayEvents(
     subscriberId: String,
     onConnectionChange: (status: Subscriber.ConnectionState) -> Unit = {},
-    messageCreated: (relayMessage: Message) -> Unit
+    messageCreated: (relayMessage: Message) -> Unit,
 ) =
     subscribeToRelayEvents(
         subscriberId,
@@ -239,5 +239,5 @@ suspend fun SudoDIRelayClient.subscribeToRelayEvents(
             override fun connectionStatusChanged(state: Subscriber.ConnectionState) {
                 onConnectionChange.invoke(state)
             }
-        }
+        },
     )

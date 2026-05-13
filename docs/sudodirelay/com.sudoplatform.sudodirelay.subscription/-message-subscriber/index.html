@@ -1,84 +1,113 @@
 <!DOCTYPE html>
-<html class="no-js">
+<html class="no-js" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>MessageSubscriber</title>
     <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
-    <script>var pathToRoot = "../../../";</script>
-    <script>document.documentElement.classList.replace("no-js","js");</script>
+        <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
-    if (storage == null) {
+      if (storage == null) {
         const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         if (osDarkSchemePreferred === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    } else {
+      } else {
         const savedDarkMode = JSON.parse(storage)
-        if(savedDarkMode === true) {
-            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
         }
-    }
+      }
     </script>
-<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
 <link href="../../../styles/style.css" rel="Stylesheet">
 <link href="../../../styles/main.css" rel="Stylesheet">
 <link href="../../../styles/prism.css" rel="Stylesheet">
 <link href="../../../styles/logo-styles.css" rel="Stylesheet">
-<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
-<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
 <script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
 <script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
-<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
 </head>
 <body>
-    <div class="root">
-<nav class="navigation" id="navigation-wrapper">
-    <div class="navigation--inner">
-        <div class="navigation-title">
-            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
-            <div class="library-name">
-                    <a class="library-name--link" href="../../../index.html">
-                            sudodirelay
-                    </a>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+            <a class="library-name--link" href="../../../index.html" tabindex="1">
+                    sudodirelay
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+5.0.0        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true"
+                        data-filter=":sudodirelay/release">release</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":sudodirelay/release"
+                                       data-filter=":sudodirelay/release"/>
+                                <span class="checkbox--icon"></span>
+                                release
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div class="library-version">
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
             </div>
         </div>
-        <div class="filter-section" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":sudodirelay:dokkaHtml/release">androidJvm</button>
-        </div>
-    </div>
-    <div class="navigation-controls">
-        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
-        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
-    </div>
-</nav>
-        <div id="container">
-            <div class="sidebar" id="leftColumn">
-                <div class="sidebar--inner" id="sideMenu"></div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config='{"defaultSize": 280, "minSize": 200, "maxSize": 400}'>
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                    data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    sudodirelay
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
             </div>
-            <div id="main">
-<div class="main-content" data-page-type="classlike" id="content" pageIds="sudodirelay::com.sudoplatform.sudodirelay.subscription/MessageSubscriber///PointingToDeclaration//902449407">
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="sudodirelay::com.sudoplatform.sudodirelay.subscription/MessageSubscriber///PointingToDeclaration//-517810805">
   <div class="breadcrumbs"><a href="../../../index.html">sudodirelay</a><span class="delimiter">/</span><a href="../index.html">com.sudoplatform.sudodirelay.subscription</a><span class="delimiter">/</span><span class="current">MessageSubscriber</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Message</span><wbr></wbr><span><span>Subscriber</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">MessageSubscriber</a> : <a href="../-subscriber/index.html">Subscriber</a></div><p class="paragraph">Subscribers implement this interface to receive notifications of newly created Messages</p><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import android.content.Context
-import com.sudoplatform.sudodirelay.BaseTests
-import com.sudoplatform.sudodirelay.SudoDIRelayClient
-import com.sudoplatform.sudodirelay.subscription.MessageSubscriber
-import com.sudoplatform.sudodirelay.subscription.Subscriber
-import com.sudoplatform.sudodirelay.types.Message
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.kotlin.mock
-import org.robolectric.RobolectricTestRunner
-
-fun main() { 
-   //sampleStart 
-   val subscriber = object : MessageSubscriber {
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":sudodirelay/release"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">MessageSubscriber</a> : <a href="../-subscriber/index.html">Subscriber</a></div><p class="paragraph">Subscribers implement this interface to receive notifications of newly created Messages</p><h4 class="">Samples</h4><div class="sample-container"><pre><code class="monospace block lang-kotlin" theme="idea">val subscriber = object : MessageSubscriber {
     override fun messageCreated(message: Message) {
         println(&quot;new message incoming! $message&quot;)
     }
@@ -86,41 +115,24 @@ fun main() {
     override fun connectionStatusChanged(state: Subscriber.ConnectionState) {
         println(&quot;connection has changed to state: $state&quot;)
     }
-} 
-   //sampleEnd
-}</code></pre></div></div></div>
+}</code></pre><span class="copy-tooltip"><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div><span class="copy-icon"></span></span></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="FUNCTION">
-        <h2 class="">Functions</h2>
-        <div class="table"><a data-name="-584256400%2FFunctions%2F902449407" anchor-label="connectionStatusChanged" id="-584256400%2FFunctions%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
-          <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="../-subscriber/connection-status-changed.html"><span>connection</span><wbr></wbr><span>Status</span><wbr></wbr><span><span>Changed</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-584256400%2FFunctions%2F902449407"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="../-subscriber/connection-status-changed.html"><span class="token function">connectionStatusChanged</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">state<span class="token operator">: </span><a href="../-subscriber/-connection-state/index.html">Subscriber.ConnectionState</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Notifies the subscriber that the subscription connection state has changed. The subscriber won't be notified of changes until the connection status changes to <a href="../-subscriber/-connection-state/-c-o-n-n-e-c-t-e-d/index.html">ConnectionState.CONNECTED</a>. The subscriber will stop receiving notifications when the connection state changes to <a href="../-subscriber/-connection-state/-d-i-s-c-o-n-n-e-c-t-e-d/index.html">ConnectionState.DISCONNECTED</a>.</p></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="-1935331240%2FFunctions%2F902449407" anchor-label="messageCreated" id="-1935331240%2FFunctions%2F902449407" data-filterable-set=":sudodirelay:dokkaHtml/release"></a>
-          <div class="table-row" data-filterable-current=":sudodirelay:dokkaHtml/release" data-filterable-set=":sudodirelay:dokkaHtml/release">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-1935331240%2FFunctions%2F-517810805" anchor-label="messageCreated" id="-1935331240%2FFunctions%2F-517810805" data-filterable-set=":sudodirelay/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":sudodirelay/release" data-filterable-set=":sudodirelay/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="message-created.html"><span>message</span><wbr></wbr><span><span>Created</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1935331240%2FFunctions%2F902449407"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1935331240%2FFunctions%2F-517810805"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":sudodirelay:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="message-created.html"><span class="token function">messageCreated</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">message<span class="token operator">: </span><a href="../../com.sudoplatform.sudodirelay.types/-message/index.html">Message</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Notifies the subscriber of a new <a href="../../com.sudoplatform.sudodirelay.types/-message/index.html">Message</a></p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":sudodirelay/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="message-created.html"><span class="token function">messageCreated</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">message<span class="token operator">: </span><a href="../../com.sudoplatform.sudodirelay.types/-message/index.html">Message</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Notifies the subscriber of a new <a href="../../com.sudoplatform.sudodirelay.types/-message/index.html">Message</a></p></div></div></div>
                 </div>
               </div>
             </div>
@@ -130,13 +142,22 @@ fun main() {
     </div>
   </div>
 </div>
-      <div class="footer">
-        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Copyright</span><span
-                class="pull-right"><span>Generated by </span><a
-                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
-      </div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>Copyright © 2026 Anonyome Labs, Inc. All rights reserved</div>
+                </div>
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

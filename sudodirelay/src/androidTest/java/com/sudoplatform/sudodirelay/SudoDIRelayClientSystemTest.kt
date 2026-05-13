@@ -101,12 +101,12 @@ class SudoDIRelayClientSystemTest : BaseSystemTest() {
 
     @Test
     fun shouldNotThrowIfAllItemsAreProvidedToBuilder() {
-        val appSyncClient = ApiClientManager.getClient(context, userClient)
+        val graphQLClient = ApiClientManager.getClient(context, userClient)
 
         SudoDIRelayClient.builder()
             .setContext(context)
             .setSudoUserClient(userClient)
-            .setAppSyncClient(appSyncClient)
+            .setGraphQLClient(graphQLClient)
             .setLogger(logger)
             .build()
     }
@@ -203,7 +203,7 @@ class SudoDIRelayClientSystemTest : BaseSystemTest() {
                 if (it.postboxId == postbox1.id) {
                     incomingPostbox1Messages.add(it)
                 }
-            }
+            },
         )
 
         // subscribe to events for postbox 2
@@ -214,7 +214,7 @@ class SudoDIRelayClientSystemTest : BaseSystemTest() {
                 if (it.postboxId == postbox2.id) {
                     incomingPostbox2Messages.add(it)
                 }
-            }
+            },
         )
 
         delay(2000)

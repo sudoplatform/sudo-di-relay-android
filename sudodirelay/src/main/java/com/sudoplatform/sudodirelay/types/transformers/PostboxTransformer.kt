@@ -27,20 +27,20 @@ internal object PostboxTransformer {
      * @return The [Postbox] entity type.
      */
     fun toEntity(
-        postbox: CreateRelayPostbox
+        postbox: CreateRelayPostbox,
     ): Postbox {
-        val sudoOwner = postbox.owners().find { it.issuer() == "sudoplatform.sudoservice" }
+        val sudoOwner = postbox.owners.find { it.issuer == "sudoplatform.sudoservice" }
             ?: throw SudoDIRelayClient.DIRelayException.FailedException()
 
         return Postbox(
-            id = postbox.id(),
-            createdAt = postbox.createdAtEpochMs().toDate(),
-            updatedAt = postbox.updatedAtEpochMs().toDate(),
-            ownerId = postbox.owner(),
-            sudoId = sudoOwner.id(),
-            connectionId = postbox.connectionId(),
+            id = postbox.id,
+            createdAt = postbox.createdAtEpochMs.toDate(),
+            updatedAt = postbox.updatedAtEpochMs.toDate(),
+            ownerId = postbox.owner,
+            sudoId = sudoOwner.id,
+            connectionId = postbox.connectionId,
             isEnabled = postbox.isEnabled,
-            serviceEndpoint = postbox.serviceEndpoint()
+            serviceEndpoint = postbox.serviceEndpoint,
         )
     }
 
@@ -51,20 +51,20 @@ internal object PostboxTransformer {
      * @return The [Postbox] entity type.
      */
     fun toEntity(
-        postbox: UpdateRelayPostboxMutation.UpdateRelayPostbox
+        postbox: UpdateRelayPostboxMutation.UpdateRelayPostbox,
     ): Postbox {
-        val sudoOwner = postbox.owners().find { it.issuer() == "sudoplatform.sudoservice" }
+        val sudoOwner = postbox.owners.find { it.issuer == "sudoplatform.sudoservice" }
             ?: throw SudoDIRelayClient.DIRelayException.FailedException()
 
         return Postbox(
-            id = postbox.id(),
-            createdAt = postbox.createdAtEpochMs().toDate(),
-            updatedAt = postbox.updatedAtEpochMs().toDate(),
-            ownerId = postbox.owner(),
-            sudoId = sudoOwner.id(),
-            connectionId = postbox.connectionId(),
+            id = postbox.id,
+            createdAt = postbox.createdAtEpochMs.toDate(),
+            updatedAt = postbox.updatedAtEpochMs.toDate(),
+            ownerId = postbox.owner,
+            sudoId = sudoOwner.id,
+            connectionId = postbox.connectionId,
             isEnabled = postbox.isEnabled,
-            serviceEndpoint = postbox.serviceEndpoint()
+            serviceEndpoint = postbox.serviceEndpoint,
         )
     }
 
@@ -76,21 +76,20 @@ internal object PostboxTransformer {
      */
     fun toEntityList(postboxes: ListRelayPostboxesQuery.ListRelayPostboxes): ListOutput<Postbox> {
         return ListOutput(
-            items = postboxes.items().map {
-                    postbox ->
+            items = postboxes.items.map { postbox ->
                 Postbox(
-                    id = postbox.id(),
-                    createdAt = postbox.createdAtEpochMs().toDate(),
-                    updatedAt = postbox.updatedAtEpochMs().toDate(),
-                    ownerId = postbox.owner(),
-                    sudoId = postbox.owners().find { it.issuer() == "sudoplatform.sudoservice" }?.id()
+                    id = postbox.id,
+                    createdAt = postbox.createdAtEpochMs.toDate(),
+                    updatedAt = postbox.updatedAtEpochMs.toDate(),
+                    ownerId = postbox.owner,
+                    sudoId = postbox.owners.find { it.issuer == "sudoplatform.sudoservice" }?.id
                         ?: throw SudoDIRelayClient.DIRelayException.FailedException(),
-                    connectionId = postbox.connectionId(),
+                    connectionId = postbox.connectionId,
                     isEnabled = postbox.isEnabled,
-                    serviceEndpoint = postbox.serviceEndpoint()
+                    serviceEndpoint = postbox.serviceEndpoint,
                 )
             },
-            nextToken = postboxes.nextToken()
+            nextToken = postboxes.nextToken,
         )
     }
 }

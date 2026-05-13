@@ -1,0 +1,15 @@
+[*.{kt,kts}]
+trim_trailing_whitespace=true
+insert_final_newline=true
+
+# Added after upgrade past 4.4.0 to stop crazy formatting.
+ktlint_standard_class-signature=disabled
+ktlint_standard_multiline-expression-wrapping=disabled
+ktlint_standard_function-expression-body=disabled
+ktlint_standard_function-signature=disabled
+ktlint_standard_no-empty-first-line-in-class-body=disabled
+ktlint_standard_chain-method-continuation=disabled
+
+[*.xml]
+trim_trailing_whitespace=true
+insert_final_newline=true

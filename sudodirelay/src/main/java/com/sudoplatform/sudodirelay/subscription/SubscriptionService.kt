@@ -6,10 +6,9 @@
 
 package com.sudoplatform.sudodirelay.subscription
 
-import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
-import com.amazonaws.mobileconnectors.appsync.AppSyncSubscriptionCall
-import com.apollographql.apollo.api.Response
-import com.apollographql.apollo.exception.ApolloException
+import com.amplifyframework.api.ApiException
+import com.amplifyframework.api.graphql.GraphQLOperation
+import com.amplifyframework.api.graphql.GraphQLResponse
 import com.sudoplatform.sudodirelay.SudoDIRelayClient
 import com.sudoplatform.sudodirelay.graphql.OnRelayMessageCreatedSubscription
 import com.sudoplatform.sudodirelay.logging.LogConstants
@@ -18,6 +17,7 @@ import com.sudoplatform.sudologging.AndroidUtilsLogDriver
 import com.sudoplatform.sudologging.LogLevel
 import com.sudoplatform.sudologging.Logger
 import com.sudoplatform.sudouser.SudoUserClient
+import com.sudoplatform.sudouser.amplify.GraphQLClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -30,51 +30,66 @@ import kotlinx.coroutines.launch
  * Manage the subscriptions of decentralized identity relay event updates.
  */
 internal class SubscriptionService(
-    private val appSyncClient: AWSAppSyncClient,
+    private val graphQLClient: GraphQLClient,
     private val userClient: SudoUserClient,
     internal val logger: Logger = Logger(
         LogConstants.SUDOLOG_TAG,
-        AndroidUtilsLogDriver(LogLevel.INFO)
-    )
+        AndroidUtilsLogDriver(LogLevel.INFO),
+    ),
 ) : AutoCloseable {
 
     companion object {
         private const val ERROR_UNAUTHENTICATED_MSG = "User client does not have subject. Is the user authenticated?"
     }
+
     private val scope = CoroutineScope(
         Dispatchers.IO + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
             if (throwable !is CancellationException) {
                 logger.error("Unhandled scope error $throwable")
-                // CancellationException is ignored because they are thrown when cancelling coroutines (not an error)
             }
-        }
+        },
     )
 
     private val messageCreatedSubscriptionManager =
         SubscriptionManager<OnRelayMessageCreatedSubscription.Data, MessageSubscriber>()
 
-    suspend fun subscribe(
-        id: String,
-        subscriber: MessageSubscriber
-    ) {
+    private val messageCreatedCallback = object {
+        val onSubscriptionEstablished: (GraphQLResponse<OnRelayMessageCreatedSubscription.Data>) -> Unit = {
+            messageCreatedSubscriptionManager.connectionStatusChanged(Subscriber.ConnectionState.CONNECTED)
+        }
+        val onSubscription: (GraphQLResponse<OnRelayMessageCreatedSubscription.Data>) -> Unit = {
+            scope.launch {
+                val message = it.data?.onRelayMessageCreated ?: return@launch
+                messageCreatedSubscriptionManager.messageCreated(
+                    MessageTransformer.toEntityFromMessageCreatedSubscriptionEvent(message),
+                )
+            }
+        }
+        val onSubscriptionCompleted = {
+            messageCreatedSubscriptionManager.connectionStatusChanged(Subscriber.ConnectionState.DISCONNECTED)
+        }
+        val onFailure: (ApiException) -> Unit = {
+            logger.error("OnMessageCreated subscription error $it")
+        }
+    }
+
+    suspend fun subscribe(id: String, subscriber: MessageSubscriber) {
         val userSubject = userClient.getSubject()
             ?: throw SudoDIRelayClient.DIRelayException.AuthenticationException(ERROR_UNAUTHENTICATED_MSG)
 
         messageCreatedSubscriptionManager.replaceSubscriber(id, subscriber)
 
         scope.launch {
-            if (messageCreatedSubscriptionManager.watcher == null &&
-                messageCreatedSubscriptionManager.pendingWatcher == null
-            ) {
-                val watcher = appSyncClient.subscribe(
-                    OnRelayMessageCreatedSubscription.builder()
-                        .owner(userSubject)
-                        .build()
+            if (messageCreatedSubscriptionManager.watcher == null) {
+                val watcher = graphQLClient.subscribe<OnRelayMessageCreatedSubscription, OnRelayMessageCreatedSubscription.Data>(
+                    OnRelayMessageCreatedSubscription.OPERATION_DOCUMENT,
+                    mapOf("owner" to userSubject),
+                    messageCreatedCallback.onSubscriptionEstablished,
+                    messageCreatedCallback.onSubscription,
+                    messageCreatedCallback.onSubscriptionCompleted,
+                    messageCreatedCallback.onFailure,
                 )
-                messageCreatedSubscriptionManager.pendingWatcher = watcher
-                watcher.execute(
-                    MessageCreatedCallback()
-                )
+                messageCreatedSubscriptionManager.watcher = watcher
             }
         }.join()
     }
@@ -90,38 +105,5 @@ internal class SubscriptionService(
     override fun close() {
         unsubscribeAll()
         scope.cancel()
-    }
-
-    private inner class MessageCreatedCallback :
-        AppSyncSubscriptionCall.StartedCallback<OnRelayMessageCreatedSubscription.Data> {
-        override fun onFailure(e: ApolloException) {
-            logger.error("OnMessageCreated subscription error $e")
-            messageCreatedSubscriptionManager.connectionStatusChanged(
-                Subscriber.ConnectionState.DISCONNECTED
-            )
-        }
-
-        override fun onResponse(response: Response<OnRelayMessageCreatedSubscription.Data>) {
-            scope.launch {
-                val message = response.data()?.onRelayMessageCreated()
-                    ?: return@launch
-                messageCreatedSubscriptionManager.messageCreated(
-                    MessageTransformer.toEntityFromMessageCreatedSubscriptionEvent(
-                        message
-                    )
-                )
-            }
-        }
-
-        override fun onCompleted() {
-            messageCreatedSubscriptionManager.connectionStatusChanged(
-                Subscriber.ConnectionState.DISCONNECTED
-            )
-        }
-
-        override fun onStarted() {
-            messageCreatedSubscriptionManager.watcher = messageCreatedSubscriptionManager.pendingWatcher
-            messageCreatedSubscriptionManager.connectionStatusChanged(Subscriber.ConnectionState.CONNECTED)
-        }
     }
 }

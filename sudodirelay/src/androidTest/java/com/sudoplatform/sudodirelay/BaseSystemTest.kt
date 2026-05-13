@@ -88,14 +88,14 @@ abstract class BaseSystemTest {
             privateKey = privateKey,
             publicKey = null,
             keyManager = keyManager,
-            keyId = keyId
+            keyId = keyId,
         )
 
         val registrationId = "di-relay-client-test_${UUID.randomUUID()}"
 
         userClient.registerWithAuthenticationProvider(
             authProvider,
-            registrationId
+            registrationId,
         )
     }
 

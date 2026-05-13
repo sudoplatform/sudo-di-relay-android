@@ -39,8 +39,8 @@ $dokka.location:com.sudoplatform.sudodirelay////PointingToDeclaration/sudodirel
 $dokka.location:com.sudoplatform.sudodirelay//subscribeToRelayEvents/com.sudoplatform.sudodirelay.SudoDIRelayClient#kotlin.String#kotlin.Function1[com.sudoplatform.sudodirelay.subscription.Subscriber.ConnectionState,kotlin.Unit]#kotlin.Function1[com.sudoplatform.sudodirelay.types.Message,kotlin.Unit]/PointingToDeclaration/sudodirelay/com.sudoplatform.sudodirelay/subscribe-to-relay-events.html
 $dokka.location:com.sudoplatform.sudodirelay/SudoDIRelayClient.Builder///PointingToDeclaration/sudodirelay/com.sudoplatform.sudodirelay/-sudo-d-i-relay-client/-builder/index.html
 $dokka.location:com.sudoplatform.sudodirelay/SudoDIRelayClient.Builder/build/#/PointingToDeclaration/sudodirelay/com.sudoplatform.sudodirelay/-sudo-d-i-relay-client/-builder/build.html
-$dokka.location:com.sudoplatform.sudodirelay/SudoDIRelayClient.Builder/setAppSyncClient/#com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient/PointingToDeclaration/sudodirelay/com.sudoplatform.sudodirelay/-sudo-d-i-relay-client/-builder/set-app-sync-client.html
 $dokka.location:com.sudoplatform.sudodirelay/SudoDIRelayClient.Builder/setContext/#android.content.Context/PointingToDeclaration/sudodirelay/com.sudoplatform.sudodirelay/-sudo-d-i-relay-client/-builder/set-context.html
+$dokka.location:com.sudoplatform.sudodirelay/SudoDIRelayClient.Builder/setGraphQLClient/#com.sudoplatform.sudouser.amplify.GraphQLClient/PointingToDeclaration/sudodirelay/com.sudoplatform.sudodirelay/-sudo-d-i-relay-client/-builder/set-graph-q-l-client.html
 $dokka.location:com.sudoplatform.sudodirelay/SudoDIRelayClient.Builder/setLogger/#com.sudoplatform.sudologging.Logger/PointingToDeclaration/sudodirelay/com.sudoplatform.sudodirelay/-sudo-d-i-relay-client/-builder/set-logger.html
 $dokka.location:com.sudoplatform.sudodirelay/SudoDIRelayClient.Builder/setSudoUserClient/#com.sudoplatform.sudouser.SudoUserClient/PointingToDeclaration/sudodirelay/com.sudoplatform.sudodirelay/-sudo-d-i-relay-client/-builder/set-sudo-user-client.html
 $dokka.location:com.sudoplatform.sudodirelay/SudoDIRelayClient.Companion///PointingToDeclaration/sudodirelay/com.sudoplatform.sudodirelay/-sudo-d-i-relay-client/-companion/index.html
@@ -72,4 +72,3 @@ $dokka.location:com.sudoplatform.sudodirelay/SudoDIRelayClient/updatePostbox/#ko
 com.sudoplatform.sudodirelay
 com.sudoplatform.sudodirelay.subscription
 com.sudoplatform.sudodirelay.types
-

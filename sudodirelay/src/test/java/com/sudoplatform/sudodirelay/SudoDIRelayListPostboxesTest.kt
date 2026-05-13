@@ -7,26 +7,24 @@
 package com.sudoplatform.sudodirelay
 
 import android.content.Context
-import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
-import com.apollographql.apollo.api.Response
-import com.apollographql.apollo.exception.ApolloHttpException
-import com.sudoplatform.sudodirelay.graphql.CallbackHolder
+import com.amplifyframework.api.ApiCategory
+import com.amplifyframework.api.ApiException
+import com.amplifyframework.api.graphql.GraphQLOperation
+import com.amplifyframework.core.Consumer
 import com.sudoplatform.sudodirelay.graphql.ListRelayPostboxesQuery
-import com.sudoplatform.sudodirelay.graphql.ListRelayPostboxesQuery.ListRelayPostboxes
+import com.sudoplatform.sudodirelay.graphql.onQuery
 import com.sudoplatform.sudouser.SudoUserClient
+import com.sudoplatform.sudouser.amplify.GraphQLClient
 import io.kotlintest.matchers.collections.shouldHaveSize
 import io.kotlintest.shouldBe
-import io.kotlintest.shouldNotBe
 import io.kotlintest.shouldThrow
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentCaptor
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argThat
+import org.mockito.kotlin.check
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
@@ -41,96 +39,72 @@ class SudoDIRelayListPostboxesTest : BaseTests() {
     private val queryInputLimit = 10
     private val queryInputNextToken = "dummyToken"
 
-    private val queryResult by before {
-        ListRelayPostboxes(
-            "",
-            listOf(
-                ListRelayPostboxesQuery.Item(
-                    "postbox",
-                    "postbox-id",
-                    0.0,
-                    1.0,
-                    "dummyOwner",
-                    listOf(ListRelayPostboxesQuery.Owner("", "sudoOwner", "sudoplatform.sudoservice")),
-                    "connection-id",
-                    true,
-                    "https://test.endpont.com/postbox-id"
-                )
-            ),
-            null
-        )
+    private fun postboxItemJson(id: String, connectionId: String) =
+        """
+        {
+            "__typename": "RelayPostbox",
+            "id": "$id",
+            "createdAtEpochMs": 0.0,
+            "updatedAtEpochMs": 1.0,
+            "owner": "dummyOwner",
+            "owners": [
+                { "__typename": "Owner", "id": "sudoOwner", "issuer": "sudoplatform.sudoservice" }
+            ],
+            "connectionId": "$connectionId",
+            "isEnabled": true,
+            "serviceEndpoint": "https://test.endpont.com/postbox-id"
+        }
+        """.trimIndent()
+
+    private val singleItemResponse by before {
+        """
+        {
+            "listRelayPostboxes": {
+                "__typename": "RelayPostboxConnection",
+                "items": [ ${postboxItemJson("postbox-id", "connection-id")} ],
+                "nextToken": null
+            }
+        }
+        """.trimIndent()
     }
 
-    private val queryResponse by before {
-        Response.builder<ListRelayPostboxesQuery.Data>(ListRelayPostboxesQuery(queryInputLimit, queryInputNextToken))
-            .data(ListRelayPostboxesQuery.Data(queryResult))
-            .build()
+    private val emptyResponse by before {
+        """
+        {
+            "listRelayPostboxes": {
+                "__typename": "RelayPostboxConnection",
+                "items": [],
+                "nextToken": null
+            }
+        }
+        """.trimIndent()
     }
 
-    private val queryResultMultiple by before {
-        ListRelayPostboxes(
-            "",
-            listOf(
-                ListRelayPostboxesQuery.Item(
-                    "postbox",
-                    "postbox-id",
-                    0.0,
-                    1.0,
-                    "dummyOwner",
-                    listOf(
-                        ListRelayPostboxesQuery.Owner("", "sudoOwner", "sudoplatform.sudoservice"),
-                        ListRelayPostboxesQuery.Owner("", "dummyOwner", "sudoplatform.not.sudoservice")
-                    ),
-                    "connection-id-1",
-                    true,
-                    "https://test.endpont.com/postbox-id"
-                ),
-                ListRelayPostboxesQuery.Item(
-                    "postbox",
-                    "postbox-id-2",
-                    2.0,
-                    3.0,
-                    "dummyOwner",
-                    listOf(ListRelayPostboxesQuery.Owner("", "sudoOwner", "sudoplatform.sudoservice")),
-                    "connection-id-2",
-                    true,
-                    "https://test.endpont.com/postbox-id"
-                ),
-                ListRelayPostboxesQuery.Item(
-                    "postbox",
-                    "postbox-id-2",
-                    4.0,
-                    5.0,
-                    "dummyOwner",
-                    listOf(ListRelayPostboxesQuery.Owner("", "sudoOwner", "sudoplatform.sudoservice")),
-                    "connection-id-3",
-                    true,
-                    "https://test.endpont.com/postbox-id"
-                )
-            ),
-            null
-        )
+    private val multipleResponse by before {
+        """
+        {
+            "listRelayPostboxes": {
+                "__typename": "RelayPostboxConnection",
+                "items": [
+                    ${postboxItemJson("postbox-id", "connection-id-1")},
+                    ${postboxItemJson("postbox-id-2", "connection-id-2")},
+                    ${postboxItemJson("postbox-id-3", "connection-id-3")}
+                ],
+                "nextToken": null
+            }
+        }
+        """.trimIndent()
     }
 
-    private val emptyQueryResult by before {
-        ListRelayPostboxes(
-            "",
-            listOf(),
-            null
-        )
-    }
+    private val mockContext by before { mock<Context>() }
 
-    private val queryHolder = CallbackHolder<ListRelayPostboxesQuery.Data>()
-
-    private val mockContext by before {
-        mock<Context>()
-    }
-
-    private val mockAppSyncClient by before {
-        mock<AWSAppSyncClient>().stub {
-            on { query(any<ListRelayPostboxesQuery>()) } doReturn queryHolder.queryOperation
+    private val mockApiCategory by before {
+        mock<ApiCategory>().stub {
+            onQuery(ListRelayPostboxesQuery.OPERATION_DOCUMENT, singleItemResponse)
         }
     }
+
+    private val graphQLClient by before { GraphQLClient(mockApiCategory) }
 
     private val mockUserClient by before {
         mock<SudoUserClient>().stub {
@@ -142,123 +116,88 @@ class SudoDIRelayListPostboxesTest : BaseTests() {
     private val client by before {
         DefaultSudoDIRelayClient(
             mockContext,
-            mockAppSyncClient,
+            graphQLClient,
             mockUserClient,
-            mockLogger
+            mockLogger,
         )
-    }
-
-    @Before
-    fun setup() {
     }
 
     @After
     fun teardown() {
-        verifyNoMoreInteractions(mockContext, mockAppSyncClient)
+        verifyNoMoreInteractions(mockContext, mockApiCategory)
     }
 
     @Test
-    fun `listPostboxes() should pass non-null parameters into the query`() = runBlocking<Unit> {
-        queryHolder.callback shouldBe null
+    fun `listPostboxes() should pass non-null parameters into the query`() = runTest {
         val limit = 9
         val nextToken = "12345678"
 
-        val deferredResult = async(Dispatchers.IO) {
-            client.listPostboxes(limit, nextToken)
-        }
+        client.listPostboxes(limit, nextToken)
 
-        deferredResult.start()
-        delay(100)
-        queryHolder.callback shouldNotBe null
-        queryHolder.callback?.onResponse(queryResponse)
-        deferredResult.await()
-
-        val actualQueryInput = ArgumentCaptor.forClass(ListRelayPostboxesQuery::class.java)
-        verify(mockAppSyncClient).query(actualQueryInput.capture())
-
-        // verify input not changed
-        actualQueryInput.value.variables().nextToken() shouldBe nextToken
-        actualQueryInput.value.variables().limit() shouldBe limit
+        verify(mockApiCategory).query<String>(
+            check {
+                it.query shouldBe ListRelayPostboxesQuery.OPERATION_DOCUMENT
+                it.variables["limit"] shouldBe limit
+                it.variables["nextToken"] shouldBe nextToken
+            },
+            any(),
+            any(),
+        )
     }
 
     @Test
-    fun `listPostboxes() should return empty list for empty result`() = runBlocking<Unit> {
-        queryHolder.callback shouldBe null
-
-        val nullResponse by before {
-            Response.builder<ListRelayPostboxesQuery.Data>(
-                ListRelayPostboxesQuery(
-                    queryInputLimit,
-                    queryInputNextToken
-                )
-            )
-                .data(ListRelayPostboxesQuery.Data(emptyQueryResult))
-                .build()
+    fun `listPostboxes() should return empty list for empty result`() = runTest {
+        mockApiCategory.stub {
+            onQuery(ListRelayPostboxesQuery.OPERATION_DOCUMENT, emptyResponse)
         }
 
-        val deferredResult = async(Dispatchers.IO) {
-            client.listPostboxes(queryInputLimit, queryInputNextToken)
-        }
-
-        deferredResult.start()
-        delay(100)
-        queryHolder.callback shouldNotBe null
-        queryHolder.callback?.onResponse(nullResponse)
-        val result = deferredResult.await()
+        val result = client.listPostboxes(queryInputLimit, queryInputNextToken)
 
         result.items shouldBe emptyList()
-
-        verify(mockAppSyncClient).query(any<ListRelayPostboxesQuery>())
+        verifyQueryCalled()
     }
 
     @Test
-    fun `listPostboxes() should return multiple entries list for multiple result`() = runBlocking<Unit> {
-        queryHolder.callback shouldBe null
-
-        val nullResponse by before {
-            Response.builder<ListRelayPostboxesQuery.Data>(
-                ListRelayPostboxesQuery(
-                    queryInputLimit,
-                    queryInputNextToken
-                )
-            )
-                .data(ListRelayPostboxesQuery.Data(queryResultMultiple))
-                .build()
+    fun `listPostboxes() should return multiple entries list for multiple result`() = runTest {
+        mockApiCategory.stub {
+            onQuery(ListRelayPostboxesQuery.OPERATION_DOCUMENT, multipleResponse)
         }
 
-        val deferredResult = async(Dispatchers.IO) {
-            client.listPostboxes(queryInputLimit, queryInputNextToken)
-        }
-
-        deferredResult.start()
-        delay(100)
-        queryHolder.callback shouldNotBe null
-        queryHolder.callback?.onResponse(nullResponse)
-        val result = deferredResult.await()
+        val result = client.listPostboxes(queryInputLimit, queryInputNextToken)
 
         result.items shouldHaveSize 3
-
-        verify(mockAppSyncClient).query(any<ListRelayPostboxesQuery>())
+        verifyQueryCalled()
     }
 
     @Test
-    fun `listPostboxes() should throw when http error occurs`() = runBlocking<Unit> {
-        queryHolder.callback shouldBe null
-
-        val deferredResult = async(Dispatchers.IO) {
-            shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
-                client.listPostboxes(null, null)
+    fun `listPostboxes() should throw when api error occurs`() = runTest {
+        mockApiCategory.stub {
+            on {
+                query<String>(
+                    argThat { this.query == ListRelayPostboxesQuery.OPERATION_DOCUMENT },
+                    any(),
+                    any(),
+                )
+            } doAnswer {
+                @Suppress("UNCHECKED_CAST")
+                (it.arguments[2] as Consumer<ApiException>)
+                    .accept(ApiException("forbidden", "denied"))
+                mock<GraphQLOperation<String>>()
             }
         }
 
-        deferredResult.start()
-        delay(100)
+        shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
+            client.listPostboxes(null, null)
+        }
 
-        queryHolder.callback shouldNotBe null
-        queryHolder.callback?.onHttpError(ApolloHttpException(CommonData.forbiddenHTTPResponse))
+        verifyQueryCalled()
+    }
 
-        deferredResult.await()
-
-        verify(mockAppSyncClient).query(any<ListRelayPostboxesQuery>())
+    private fun verifyQueryCalled() {
+        verify(mockApiCategory).query<String>(
+            check { it.query shouldBe ListRelayPostboxesQuery.OPERATION_DOCUMENT },
+            any(),
+            any(),
+        )
     }
 }

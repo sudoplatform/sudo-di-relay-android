@@ -1,68 +1,53 @@
 package com.sudoplatform.sudodirelay
 
 import android.content.Context
-import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
-import com.apollographql.apollo.api.Error
-import com.apollographql.apollo.api.Response
-import com.apollographql.apollo.exception.ApolloHttpException
-import com.sudoplatform.sudodirelay.graphql.CallbackHolder
+import com.amplifyframework.api.ApiCategory
+import com.amplifyframework.api.ApiException
+import com.amplifyframework.api.graphql.GraphQLOperation
+import com.amplifyframework.api.graphql.GraphQLResponse
+import com.amplifyframework.core.Consumer
 import com.sudoplatform.sudodirelay.graphql.DeleteRelayPostboxMutation
+import com.sudoplatform.sudodirelay.graphql.onMutate
 import com.sudoplatform.sudodirelay.graphql.type.DeleteRelayPostboxInput
 import com.sudoplatform.sudouser.SudoUserClient
+import com.sudoplatform.sudouser.amplify.GraphQLClient
 import io.kotlintest.shouldBe
-import io.kotlintest.shouldNotBe
 import io.kotlintest.shouldThrow
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentCaptor
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argThat
+import org.mockito.kotlin.check
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoMoreInteractions
-import kotlin.RuntimeException
 
 /**
  * Test the correct operation of [SudoDIRelayClient.deletePostbox] using mocks and spies.
  */
 class SudoDIRelayDeletePostboxTest : BaseTests() {
-    private val mutationInput by before {
-        DeleteRelayPostboxInput.builder()
-            .postboxId("postbox-id")
-            .build()
-    }
 
-    private val mutationResult by before {
-        DeleteRelayPostboxMutation.DeleteRelayPostbox(
-            "typename",
-            "postbox-id"
-        )
-    }
+    private val mutationResponseJson =
+        """
+        {
+            "deleteRelayPostbox": { "__typename": "DeletedPostbox", "id": "postbox-id" }
+        }
+        """.trimIndent()
 
-    private val mutationResponse by before {
-        Response.builder<DeleteRelayPostboxMutation.Data>(DeleteRelayPostboxMutation(mutationInput))
-            .data(DeleteRelayPostboxMutation.Data(mutationResult))
-            .build()
-    }
+    private val mockContext by before { mock<Context>() }
 
-    private val mutationHolder = CallbackHolder<DeleteRelayPostboxMutation.Data>()
-
-    private val mockContext by before {
-        mock<Context>()
-    }
-
-    private val mockAppSyncClient by before {
-        mock<AWSAppSyncClient>().stub {
-            on { mutate(any<DeleteRelayPostboxMutation>()) } doReturn mutationHolder.mutationOperation
+    private val mockApiCategory by before {
+        mock<ApiCategory>().stub {
+            onMutate(DeleteRelayPostboxMutation.OPERATION_DOCUMENT, mutationResponseJson)
         }
     }
+
+    private val graphQLClient by before { GraphQLClient(mockApiCategory) }
 
     private val mockUserClient by before {
         mock<SudoUserClient>().stub {
@@ -74,158 +59,119 @@ class SudoDIRelayDeletePostboxTest : BaseTests() {
     private val client by before {
         DefaultSudoDIRelayClient(
             mockContext,
-            mockAppSyncClient,
+            graphQLClient,
             mockUserClient,
-            mockLogger
+            mockLogger,
         )
-    }
-
-    @Before
-    fun setup() {
     }
 
     @After
     fun teardown() {
-        verifyNoMoreInteractions(mockContext, mockAppSyncClient)
+        verifyNoMoreInteractions(mockContext, mockApiCategory)
     }
 
     @Test
-    fun `deletePostbox(variables) should pass variables correctly into mutation input`() =
-        runBlocking<Unit> {
-            mutationHolder.callback shouldBe null
+    fun `deletePostbox(variables) should pass variables correctly into mutation input`() = runTest {
+        val postboxId = "1234-1234-1234-1234"
 
-            val postboxId = "1234-1234-1234-1234"
+        client.deletePostbox(postboxId)
 
-            val deferredResult = async(Dispatchers.IO) {
-                client.deletePostbox(postboxId)
-            }
-
-            deferredResult.start()
-            delay(100)
-
-            mutationHolder.callback shouldNotBe null
-            mutationHolder.callback?.onResponse(mutationResponse)
-            deferredResult.await()
-
-            val actualMutationInput = ArgumentCaptor.forClass(DeleteRelayPostboxMutation::class.java)
-            verify(mockAppSyncClient).mutate(actualMutationInput.capture())
-            actualMutationInput.value.variables().input().postboxId() shouldBe postboxId
-        }
+        verify(mockApiCategory).mutate<String>(
+            check {
+                it.query shouldBe DeleteRelayPostboxMutation.OPERATION_DOCUMENT
+                val input = it.variables["input"] as DeleteRelayPostboxInput
+                input.postboxId shouldBe postboxId
+            },
+            any(),
+            any(),
+        )
+    }
 
     @Test
-    fun `deletePostbox() should invoke appSync client`() =
-        runBlocking<Unit> {
-            mutationHolder.callback shouldBe null
-
-            val deferredResult = async(Dispatchers.IO) {
-                client.deletePostbox("postbox-id")
-            }
-
-            deferredResult.start()
-            delay(100)
-
-            mutationHolder.callback shouldNotBe null
-            mutationHolder.callback?.onResponse(mutationResponse)
-            deferredResult.await()
-
-            verify(mockAppSyncClient).mutate(any<DeleteRelayPostboxMutation>())
-        }
+    fun `deletePostbox() should invoke graphQL client`() = runTest {
+        client.deletePostbox("postbox-id")
+        verifyMutateCalled()
+    }
 
     @Test
-    fun `deletePostbox() should not throw on null response`() = runBlocking<Unit> {
-        mutationHolder.callback shouldBe null
+    fun `deletePostbox() should not throw on null response`() = runTest {
+        mockApiCategory.stub {
+            onMutate(DeleteRelayPostboxMutation.OPERATION_DOCUMENT, "{}")
+        }
 
         val postboxId = "postbox-id"
-        val badMutationResponse by before {
-            Response.builder<DeleteRelayPostboxMutation.Data>(DeleteRelayPostboxMutation(mutationInput))
-                .data(null)
-                .build()
-        }
+        val result = client.deletePostbox(postboxId)
 
-        val deferredResult = async(Dispatchers.IO) {
-            client.deletePostbox(postboxId)
-        }
-
-        deferredResult.start()
-        delay(100)
-
-        mutationHolder.callback shouldNotBe null
-        mutationHolder.callback?.onResponse(badMutationResponse)
-        val result = deferredResult.await()
-
-        verify(mockAppSyncClient).mutate(any<DeleteRelayPostboxMutation>())
         result shouldBe postboxId
+        verifyMutateCalled()
     }
 
     @Test
-    fun `deletePostbox() should not throw on UnauthorizedPostboxAccess response`() = runBlocking<Unit> {
-        mutationHolder.callback shouldBe null
+    fun `deletePostbox() should not throw on UnauthorizedPostboxAccess response`() = runTest {
+        mockApiCategory.stub {
+            onMutate(
+                DeleteRelayPostboxMutation.OPERATION_DOCUMENT,
+                "{}",
+                listOf(graphQLError("sudoplatform.relay.UnauthorizedPostboxAccessError")),
+            )
+        }
 
         val postboxId = "postbox-id"
-        val unauthorizedAccessError =
-            Error("mock", emptyList(), mapOf("errorType" to "sudoplatform.relay.UnauthorizedPostboxAccessError"))
-        val badMutationResponse by before {
-            Response.builder<DeleteRelayPostboxMutation.Data>(DeleteRelayPostboxMutation(mutationInput))
-                .data(null)
-                .errors(mutableListOf(unauthorizedAccessError))
-                .build()
-        }
+        val result = client.deletePostbox(postboxId)
 
-        val deferredResult = async(Dispatchers.IO) {
-            client.deletePostbox(postboxId)
-        }
-
-        deferredResult.start()
-        delay(100)
-
-        mutationHolder.callback shouldNotBe null
-        mutationHolder.callback?.onResponse(badMutationResponse)
-        val result = deferredResult.await()
-
-        verify(mockAppSyncClient).mutate(any<DeleteRelayPostboxMutation>())
         result shouldBe postboxId
+        verifyMutateCalled()
     }
 
     @Test
-    fun `deletePostbox() should throw on apollo http error`() = runBlocking<Unit> {
-        mutationHolder.callback shouldBe null
-
-        val deferredResult = async(Dispatchers.IO) {
-            shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
-                client.deletePostbox("postbox-id")
+    fun `deletePostbox() should throw on api error`() = runTest {
+        mockApiCategory.stub {
+            on {
+                mutate<String>(
+                    argThat { this.query == DeleteRelayPostboxMutation.OPERATION_DOCUMENT },
+                    any(),
+                    any(),
+                )
+            } doAnswer {
+                @Suppress("UNCHECKED_CAST")
+                (it.arguments[2] as Consumer<ApiException>)
+                    .accept(ApiException("forbidden", "denied"))
+                mock<GraphQLOperation<String>>()
             }
         }
 
-        deferredResult.start()
-        delay(100)
+        shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
+            client.deletePostbox("postbox-id")
+        }
 
-        mutationHolder.callback shouldNotBe null
-        mutationHolder.callback?.onHttpError(ApolloHttpException(CommonData.forbiddenHTTPResponse))
-
-        deferredResult.await()
-
-        verify(mockAppSyncClient).mutate(any<DeleteRelayPostboxMutation>())
+        verifyMutateCalled()
     }
 
     @Test
-    fun `deletePostbox() should throw on unknown error`() = runBlocking<Unit> {
-        mutationHolder.callback shouldBe null
-
-        mockAppSyncClient.stub {
-            on { mutate(any<DeleteRelayPostboxMutation>()) } doThrow RuntimeException("Mock runtime error")
+    fun `deletePostbox() should throw on unknown error`() = runTest {
+        mockApiCategory.stub {
+            on { mutate<String>(any(), any(), any()) } doThrow RuntimeException("Mock runtime error")
         }
 
-        val deferredResult = async(Dispatchers.IO) {
-            shouldThrow<SudoDIRelayClient.DIRelayException.UnknownException> {
-                client.deletePostbox("postbox-id")
-            }
+        shouldThrow<SudoDIRelayClient.DIRelayException.UnknownException> {
+            client.deletePostbox("postbox-id")
         }
 
-        deferredResult.start()
-        delay(100)
+        verifyMutateCalled()
+    }
 
-        deferredResult.await()
+    private fun graphQLError(errorType: String) = GraphQLResponse.Error(
+        "mock",
+        null,
+        null,
+        mapOf("errorType" to errorType),
+    )
 
-        verify(mockAppSyncClient).mutate(any<DeleteRelayPostboxMutation>())
+    private fun verifyMutateCalled() {
+        verify(mockApiCategory).mutate<String>(
+            check { it.query shouldBe DeleteRelayPostboxMutation.OPERATION_DOCUMENT },
+            any(),
+            any(),
+        )
     }
 }

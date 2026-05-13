@@ -1,27 +1,26 @@
 package com.sudoplatform.sudodirelay
 
 import android.content.Context
-import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
-import com.apollographql.apollo.api.Error
-import com.apollographql.apollo.api.Response
-import com.apollographql.apollo.exception.ApolloHttpException
-import com.sudoplatform.sudodirelay.graphql.CallbackHolder
+import com.amplifyframework.api.ApiCategory
+import com.amplifyframework.api.ApiException
+import com.amplifyframework.api.graphql.GraphQLOperation
+import com.amplifyframework.api.graphql.GraphQLResponse
+import com.amplifyframework.core.Consumer
+import com.apollographql.apollo.api.Optional
 import com.sudoplatform.sudodirelay.graphql.UpdateRelayPostboxMutation
-import com.sudoplatform.sudodirelay.graphql.UpdateRelayPostboxMutation.Owner
+import com.sudoplatform.sudodirelay.graphql.onMutate
 import com.sudoplatform.sudodirelay.graphql.type.UpdateRelayPostboxInput
 import com.sudoplatform.sudouser.SudoUserClient
+import com.sudoplatform.sudouser.amplify.GraphQLClient
 import io.kotlintest.shouldBe
-import io.kotlintest.shouldNotBe
 import io.kotlintest.shouldThrow
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentCaptor
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argThat
+import org.mockito.kotlin.check
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
@@ -34,44 +33,34 @@ import org.mockito.kotlin.verifyNoMoreInteractions
  */
 class SudoDIRelayUpdatePostboxTest : BaseTests() {
 
-    private val mutationInput by before {
-        UpdateRelayPostboxInput.builder()
-            .postboxId("postbox-id")
-            .isEnabled(true)
-            .build()
-    }
+    private val mutationResponseJson =
+        """
+        {
+            "updateRelayPostbox": {
+                "__typename": "RelayPostbox",
+                "id": "postbox-id",
+                "createdAtEpochMs": 0.0,
+                "updatedAtEpochMs": 1.0,
+                "owner": "dummyOwner",
+                "owners": [
+                    { "__typename": "Owner", "id": "dummySudoOwner", "issuer": "sudoplatform.sudoservice" }
+                ],
+                "connectionId": "connection-id",
+                "isEnabled": true,
+                "serviceEndpoint": "https://service.endpoint.test/this-should-be-our-connection-id"
+            }
+        }
+        """.trimIndent()
 
-    private val mutationResult by before {
-        UpdateRelayPostboxMutation.UpdateRelayPostbox(
-            "typename",
-            "postbox-id",
-            0.0,
-            1.0,
-            "dummyOwner",
-            listOf(Owner("owner", "dummySudoOwner", "sudoplatform.sudoservice")),
-            "connection-id",
-            true,
-            "https://service.endpoint.test/this-should-be-our-connection-id"
-        )
-    }
+    private val mockContext by before { mock<Context>() }
 
-    private val mutationResponse by before {
-        Response.builder<UpdateRelayPostboxMutation.Data>(UpdateRelayPostboxMutation(mutationInput))
-            .data(UpdateRelayPostboxMutation.Data(mutationResult))
-            .build()
-    }
-
-    private val mutationHolder = CallbackHolder<UpdateRelayPostboxMutation.Data>()
-
-    private val mockContext by before {
-        mock<Context>()
-    }
-
-    private val mockAppSyncClient by before {
-        mock<AWSAppSyncClient>().stub {
-            on { mutate(any<UpdateRelayPostboxMutation>()) } doReturn mutationHolder.mutationOperation
+    private val mockApiCategory by before {
+        mock<ApiCategory>().stub {
+            onMutate(UpdateRelayPostboxMutation.OPERATION_DOCUMENT, mutationResponseJson)
         }
     }
+
+    private val graphQLClient by before { GraphQLClient(mockApiCategory) }
 
     private val mockUserClient by before {
         mock<SudoUserClient>().stub {
@@ -83,165 +72,133 @@ class SudoDIRelayUpdatePostboxTest : BaseTests() {
     private val client by before {
         DefaultSudoDIRelayClient(
             mockContext,
-            mockAppSyncClient,
+            graphQLClient,
             mockUserClient,
-            mockLogger
+            mockLogger,
         )
-    }
-
-    @Before
-    fun setup() {
     }
 
     @After
     fun teardown() {
-        verifyNoMoreInteractions(mockContext, mockAppSyncClient)
+        verifyNoMoreInteractions(mockContext, mockApiCategory)
     }
 
     @Test
-    fun `UpdatePostbox(variables) should pass variables correctly into mutation input`() =
-        runBlocking<Unit> {
-            val postboxId = "postbox-id"
-            val enabled = true
-            mutationHolder.callback shouldBe null
+    fun `UpdatePostbox(variables) should pass variables correctly into mutation input`() = runTest {
+        val postboxId = "postbox-id"
+        val enabled = true
 
-            val deferredResult = async(Dispatchers.IO) {
-                client.updatePostbox(postboxId, enabled)
-            }
+        client.updatePostbox(postboxId, enabled)
 
-            deferredResult.start()
-            delay(100)
-
-            mutationHolder.callback shouldNotBe null
-            mutationHolder.callback?.onResponse(mutationResponse)
-            deferredResult.await()
-
-            val actualMutationInput = ArgumentCaptor.forClass(UpdateRelayPostboxMutation::class.java)
-            verify(mockAppSyncClient).mutate(actualMutationInput.capture())
-            with(actualMutationInput.value.variables().input()) {
-                postboxId() shouldBe postboxId
-                isEnabled shouldBe enabled
-            }
-        }
-
-    @Test
-    fun `UpdatePostbox(variables) should pass nullable variables correctly into mutation input`() =
-        runBlocking<Unit> {
-            val postboxId = "postbox-id"
-            val enabled = null
-            mutationHolder.callback shouldBe null
-
-            val deferredResult = async(Dispatchers.IO) {
-                client.updatePostbox(postboxId, enabled)
-            }
-
-            deferredResult.start()
-            delay(100)
-
-            mutationHolder.callback shouldNotBe null
-            mutationHolder.callback?.onResponse(mutationResponse)
-            deferredResult.await()
-
-            val actualMutationInput = ArgumentCaptor.forClass(UpdateRelayPostboxMutation::class.java)
-            verify(mockAppSyncClient).mutate(actualMutationInput.capture())
-            with(actualMutationInput.value.variables().input()) {
-                postboxId() shouldBe postboxId
-                isEnabled shouldBe null
-            }
-        }
-
-    @Test
-    fun `UpdatePostbox() should throw with unauthorized access error`() = runBlocking<Unit> {
-        val deferredResult = async(Dispatchers.IO) {
-            shouldThrow<SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException> {
-                client.updatePostbox("postbox-id", null)
-            }
-        }
-
-        val unauthorizedError =
-            Error("mock", emptyList(), mapOf("errorType" to "sudoplatform.relay.UnauthorizedPostboxAccessError"))
-
-        val mutationResponseUnauthorizedError by before {
-            Response.builder<UpdateRelayPostboxMutation.Data>(UpdateRelayPostboxMutation(mutationInput))
-                .data(null)
-                .errors(mutableListOf(unauthorizedError))
-                .build()
-        }
-
-        deferredResult.start()
-        delay(100)
-
-        mutationHolder.callback?.onResponse(mutationResponseUnauthorizedError)
-
-        deferredResult.await()
-
-        verify(mockAppSyncClient).mutate(any<UpdateRelayPostboxMutation>())
+        verify(mockApiCategory).mutate<String>(
+            check {
+                it.query shouldBe UpdateRelayPostboxMutation.OPERATION_DOCUMENT
+                val input = it.variables["input"] as UpdateRelayPostboxInput
+                input.postboxId shouldBe postboxId
+                input.isEnabled shouldBe Optional.presentIfNotNull(enabled)
+            },
+            any(),
+            any(),
+        )
     }
 
     @Test
-    fun `UpdatePostbox() should throw generic on null response no errors`() = runBlocking<Unit> {
-        val deferredResult = async(Dispatchers.IO) {
-            shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
-                client.updatePostbox("postbox-id", null)
-            }
-        }
+    fun `UpdatePostbox(variables) should pass nullable variables correctly into mutation input`() = runTest {
+        val postboxId = "postbox-id"
 
-        val mutationResponseNullData by before {
-            Response.builder<UpdateRelayPostboxMutation.Data>(UpdateRelayPostboxMutation(mutationInput))
-                .data(null)
-                .build()
-        }
+        client.updatePostbox(postboxId, null)
 
-        deferredResult.start()
-        delay(100)
-
-        mutationHolder.callback?.onResponse(mutationResponseNullData)
-
-        deferredResult.await()
-
-        verify(mockAppSyncClient).mutate(any<UpdateRelayPostboxMutation>())
+        verify(mockApiCategory).mutate<String>(
+            check {
+                it.query shouldBe UpdateRelayPostboxMutation.OPERATION_DOCUMENT
+                val input = it.variables["input"] as UpdateRelayPostboxInput
+                input.postboxId shouldBe postboxId
+                input.isEnabled shouldBe Optional.presentIfNotNull(null)
+            },
+            any(),
+            any(),
+        )
     }
 
     @Test
-    fun `UpdatePostbox() should throw on apollo http error`() = runBlocking<Unit> {
-        mutationHolder.callback shouldBe null
-
-        val deferredResult = async(Dispatchers.IO) {
-            shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
-                client.updatePostbox("postbox-id", null)
-            }
+    fun `UpdatePostbox() should throw with unauthorized access error`() = runTest {
+        mockApiCategory.stub {
+            onMutate(
+                UpdateRelayPostboxMutation.OPERATION_DOCUMENT,
+                null,
+                listOf(graphQLError("sudoplatform.relay.UnauthorizedPostboxAccessError")),
+            )
         }
 
-        deferredResult.start()
-        delay(100)
+        shouldThrow<SudoDIRelayClient.DIRelayException.UnauthorizedPostboxException> {
+            client.updatePostbox("postbox-id", null)
+        }
 
-        mutationHolder.callback shouldNotBe null
-        mutationHolder.callback?.onHttpError(ApolloHttpException(CommonData.forbiddenHTTPResponse))
-
-        deferredResult.await()
-
-        verify(mockAppSyncClient).mutate(any<UpdateRelayPostboxMutation>())
+        verifyMutateCalled()
     }
 
     @Test
-    fun `UpdatePostbox() should throw on unknown error on other error`() = runBlocking<Unit> {
-        mutationHolder.callback shouldBe null
-
-        mockAppSyncClient.stub {
-            on { mutate(any<UpdateRelayPostboxMutation>()) } doThrow RuntimeException("Mock runtime error")
+    fun `UpdatePostbox() should throw generic on null response no errors`() = runTest {
+        mockApiCategory.stub {
+            onMutate(UpdateRelayPostboxMutation.OPERATION_DOCUMENT, null)
         }
 
-        val deferredResult = async(Dispatchers.IO) {
-            shouldThrow<SudoDIRelayClient.DIRelayException.UnknownException> {
-                client.updatePostbox("postbox-id", null)
+        shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
+            client.updatePostbox("postbox-id", null)
+        }
+
+        verifyMutateCalled()
+    }
+
+    @Test
+    fun `UpdatePostbox() should throw on api error`() = runTest {
+        mockApiCategory.stub {
+            on {
+                mutate<String>(
+                    argThat { this.query == UpdateRelayPostboxMutation.OPERATION_DOCUMENT },
+                    any(),
+                    any(),
+                )
+            } doAnswer {
+                @Suppress("UNCHECKED_CAST")
+                (it.arguments[2] as Consumer<ApiException>)
+                    .accept(ApiException("forbidden", "denied"))
+                mock<GraphQLOperation<String>>()
             }
         }
 
-        deferredResult.start()
-        delay(100)
+        shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {
+            client.updatePostbox("postbox-id", null)
+        }
 
-        deferredResult.await()
+        verifyMutateCalled()
+    }
 
-        verify(mockAppSyncClient).mutate(any<UpdateRelayPostboxMutation>())
+    @Test
+    fun `UpdatePostbox() should throw on unknown error on other error`() = runTest {
+        mockApiCategory.stub {
+            on { mutate<String>(any(), any(), any()) } doThrow RuntimeException("Mock runtime error")
+        }
+
+        shouldThrow<SudoDIRelayClient.DIRelayException.UnknownException> {
+            client.updatePostbox("postbox-id", null)
+        }
+
+        verifyMutateCalled()
+    }
+
+    private fun graphQLError(errorType: String) = GraphQLResponse.Error(
+        "mock",
+        null,
+        null,
+        mapOf("errorType" to errorType),
+    )
+
+    private fun verifyMutateCalled() {
+        verify(mockApiCategory).mutate<String>(
+            check { it.query shouldBe UpdateRelayPostboxMutation.OPERATION_DOCUMENT },
+            any(),
+            any(),
+        )
     }
 }

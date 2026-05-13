@@ -24,17 +24,17 @@ internal object MessageTransformer {
      * @return The [Message] entity type.
      */
     fun toEntityFromMessageCreatedSubscriptionEvent(
-        newMessage: OnRelayMessageCreatedSubscription.OnRelayMessageCreated
+        newMessage: OnRelayMessageCreatedSubscription.OnRelayMessageCreated,
     ): Message {
         return Message(
-            id = newMessage.id(),
-            createdAt = newMessage.createdAtEpochMs().toDate(),
-            updatedAt = newMessage.updatedAtEpochMs().toDate(),
-            ownerId = newMessage.owner(),
-            sudoId = newMessage.owners().find { it.issuer() == "sudoplatform.sudoservice" }?.id()
+            id = newMessage.id,
+            createdAt = newMessage.createdAtEpochMs.toDate(),
+            updatedAt = newMessage.updatedAtEpochMs.toDate(),
+            ownerId = newMessage.owner,
+            sudoId = newMessage.owners.find { it.issuer == "sudoplatform.sudoservice" }?.id
                 ?: throw SudoDIRelayClient.DIRelayException.FailedException(),
-            postboxId = newMessage.postboxId(),
-            message = newMessage.message()
+            postboxId = newMessage.postboxId,
+            message = newMessage.message,
         )
     }
 
@@ -46,20 +46,19 @@ internal object MessageTransformer {
      */
     fun toEntityList(messages: ListRelayMessagesQuery.ListRelayMessages): ListOutput<Message> {
         return ListOutput(
-            items = messages.items().map {
-                    message ->
+            items = messages.items.map { message ->
                 Message(
-                    id = message.id(),
-                    createdAt = message.createdAtEpochMs().toDate(),
-                    updatedAt = message.updatedAtEpochMs().toDate(),
-                    ownerId = message.owner(),
-                    sudoId = message.owners().find { it.issuer() == "sudoplatform.sudoservice" }?.id()
+                    id = message.id,
+                    createdAt = message.createdAtEpochMs.toDate(),
+                    updatedAt = message.updatedAtEpochMs.toDate(),
+                    ownerId = message.owner,
+                    sudoId = message.owners.find { it.issuer == "sudoplatform.sudoservice" }?.id
                         ?: throw SudoDIRelayClient.DIRelayException.FailedException(),
-                    postboxId = message.postboxId(),
-                    message = message.message()
+                    postboxId = message.postboxId,
+                    message = message.message,
                 )
             },
-            nextToken = messages.nextToken()
+            nextToken = messages.nextToken,
         )
     }
 }

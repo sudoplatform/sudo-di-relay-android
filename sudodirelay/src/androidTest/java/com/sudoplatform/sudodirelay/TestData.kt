@@ -16,6 +16,7 @@ object TestData {
     val sudo = buildTestSudo("shopping")
 
     const val TWO_MINUTE_MS = 2 * 60 * 1000L
+
     fun buildTestSudo(label: String = "Shopping"): Sudo {
         return Sudo("Mr", "Theodore", "Bear", label, null, null)
     }

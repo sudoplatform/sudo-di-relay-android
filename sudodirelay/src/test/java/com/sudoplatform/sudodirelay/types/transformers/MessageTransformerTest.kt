@@ -15,14 +15,13 @@ class MessageTransformerTest {
     fun `test entity transform of regular onMessageCreated subscription event`() {
         // given
         val input = OnRelayMessageCreatedSubscription.OnRelayMessageCreated(
-            "",
             "mid1",
             0.0,
             1.0,
             "dummyOwner",
-            listOf(Owner("", "dummySudoOwner", "sudoplatform.sudoservice")),
+            listOf(Owner("dummySudoOwner", "sudoplatform.sudoservice")),
             "dummyPostboxId",
-            "the message"
+            "the message",
         )
         val expectedOutput = Message(
             "mid1",
@@ -31,7 +30,7 @@ class MessageTransformerTest {
             "dummyOwner",
             "dummySudoOwner",
             "dummyPostboxId",
-            "the message"
+            "the message",
         )
 
         // when
@@ -45,43 +44,39 @@ class MessageTransformerTest {
     fun `test entity transform of regular listMessages data`() {
         // given
         val messagesList = ListRelayMessagesQuery.ListRelayMessages(
-            "",
             listOf(
                 ListRelayMessagesQuery.Item(
-                    "",
                     "msg1",
                     0.0,
                     1.0,
                     "dummyOwner",
                     listOf(
-                        ListRelayMessagesQuery.Owner("", "dummySudoOwner", "sudoplatform.sudoservice"),
-                        ListRelayMessagesQuery.Owner("", "notSudoOwner", "sudoplatform.identityservice")
+                        ListRelayMessagesQuery.Owner("dummySudoOwner", "sudoplatform.sudoservice"),
+                        ListRelayMessagesQuery.Owner("notSudoOwner", "sudoplatform.identityservice"),
                     ),
                     "dummyPostboxId",
-                    "the message"
+                    "the message",
                 ),
                 ListRelayMessagesQuery.Item(
-                    "",
                     "msg2",
                     2.0,
                     3.0,
                     "dummyOwner",
-                    listOf(ListRelayMessagesQuery.Owner("", "dummySudoOwner", "sudoplatform.sudoservice")),
+                    listOf(ListRelayMessagesQuery.Owner("dummySudoOwner", "sudoplatform.sudoservice")),
                     "dummyPostboxId",
-                    "the other message"
+                    "the other message",
                 ),
                 ListRelayMessagesQuery.Item(
-                    "",
                     "msg3",
                     4.0,
                     5.0,
                     "dummyOwner",
-                    listOf(ListRelayMessagesQuery.Owner("", "dummySudoOwner", "sudoplatform.sudoservice")),
+                    listOf(ListRelayMessagesQuery.Owner("dummySudoOwner", "sudoplatform.sudoservice")),
                     "dummyPostboxId2",
-                    "the message from another postbox"
-                )
+                    "the message from another postbox",
+                ),
             ),
-            null
+            null,
         )
 
         val expectedItems = listOf(
@@ -92,7 +87,7 @@ class MessageTransformerTest {
                 "dummyOwner",
                 "dummySudoOwner",
                 "dummyPostboxId",
-                "the message"
+                "the message",
             ),
             Message(
                 "msg2",
@@ -101,7 +96,7 @@ class MessageTransformerTest {
                 "dummyOwner",
                 "dummySudoOwner",
                 "dummyPostboxId",
-                "the other message"
+                "the other message",
             ),
             Message(
                 "msg3",
@@ -110,8 +105,8 @@ class MessageTransformerTest {
                 "dummyOwner",
                 "dummySudoOwner",
                 "dummyPostboxId2",
-                "the message from another postbox"
-            )
+                "the message from another postbox",
+            ),
         )
 
         // when
@@ -130,33 +125,30 @@ class MessageTransformerTest {
     fun `test entity transform of listMessages data with missing owner fails`() {
         // given
         val messagesList = ListRelayMessagesQuery.ListRelayMessages(
-            "",
             listOf(
                 ListRelayMessagesQuery.Item(
-                    "",
                     "msg1",
                     0.0,
                     1.0,
                     "dummyOwner",
                     listOf(
-                        ListRelayMessagesQuery.Owner("", "notSudoOwner", "sudoplatform.not.sudoservice"),
-                        ListRelayMessagesQuery.Owner("", "alsoNotSudoOwner", "sudoplatform.identityservice")
+                        ListRelayMessagesQuery.Owner("notSudoOwner", "sudoplatform.not.sudoservice"),
+                        ListRelayMessagesQuery.Owner("alsoNotSudoOwner", "sudoplatform.identityservice"),
                     ),
                     "dummyPostboxId",
-                    "the message"
+                    "the message",
                 ),
                 ListRelayMessagesQuery.Item(
-                    "",
                     "msg2",
                     2.0,
                     3.0,
                     "dummyOwner",
-                    listOf(ListRelayMessagesQuery.Owner("", "notSudoOwner", "sudoplatform.not.sudoservice")),
+                    listOf(ListRelayMessagesQuery.Owner("notSudoOwner", "sudoplatform.not.sudoservice")),
                     "dummyPostboxId",
-                    "the other message"
-                )
+                    "the other message",
+                ),
             ),
-            null
+            null,
         )
 
         shouldThrow<SudoDIRelayClient.DIRelayException.FailedException> {

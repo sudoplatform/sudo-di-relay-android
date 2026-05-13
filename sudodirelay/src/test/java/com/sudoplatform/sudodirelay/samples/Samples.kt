@@ -13,15 +13,12 @@ import com.sudoplatform.sudodirelay.subscription.MessageSubscriber
 import com.sudoplatform.sudodirelay.subscription.Subscriber
 import com.sudoplatform.sudodirelay.types.Message
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
-import org.robolectric.RobolectricTestRunner
 
 /**
  * These are sample snippets of code that are included in the generated documentation. They are
  * placed here in the test code so that at least we know they will compile.
  */
-@RunWith(RobolectricTestRunner::class)
 @Suppress("UNUSED_VARIABLE")
 class Samples : BaseTests() {
 

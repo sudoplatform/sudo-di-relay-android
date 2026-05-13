@@ -1,0 +1,70 @@
+[versions]
+agp = "9.2.1"
+kotlin = "2.3.21"
+kotlinReflect = "2.3.0"
+coroutines = "1.10.2"
+apollo = "4.4.3"
+owaspDependency = "12.2.2"
+licenseTools = "3.1.0"
+kotlinter = "5.4.2"
+sonarqube = "7.3.0.8198"
+nexusPublish = "2.0.0"
+dokka = "2.2.0"
+desugarJdkLibs = "2.1.5"
+kotest = "3.4.2"
+mockito = "5.23.0"
+mockitoKotlin = "6.3.0"
+androidxTest = "1.7.0"
+androidxTestJunit = "1.3.0"
+robolectric = "4.16.1"
+timber = "5.0.1"
+awaitility = "3.1.6" # keep at 3.x for hamcrest 1.3 compatibility
+sudoEntitlementsAdmin = "11.0.0"
+sudoKeyManager = "9.0.0"
+sudoLogging = "6.0.0"
+sudoConfigManager = "9.0.0"
+sudoUser = "21.1.0"
+sudoApiClient = "12.0.0"
+sudoProfiles = "18.0.0"
+sudoEntitlements = "13.0.0"
+awsBom = "2.44.4"
+snakeyaml = "2.6"
+
+[libraries]
+desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdkLibs" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+apollo-runtime = { module = "com.apollographql.apollo:apollo-runtime", version.ref = "apollo" }
+sudo-keymanager = { module = "com.sudoplatform:sudokeymanager", version.ref = "sudoKeyManager" }
+sudo-logging = { module = "com.sudoplatform:sudologging", version.ref = "sudoLogging" }
+sudo-config-manager = { module = "com.sudoplatform:sudoconfigmanager", version.ref = "sudoConfigManager" }
+sudo-user = { module = "com.sudoplatform:sudouser", version.ref = "sudoUser" }
+sudo-api-client = { module = "com.sudoplatform:sudoapiclient", version.ref = "sudoApiClient" }
+sudo-profiles = { module = "com.sudoplatform:sudoprofiles", version.ref = "sudoProfiles" }
+sudo-entitlements = { module = "com.sudoplatform:sudoentitlements", version.ref = "sudoEntitlements" }
+sudo-entitlements-admin = { module = "com.sudoplatform:sudoentitlementsadmin", version.ref = "sudoEntitlementsAdmin" }
+kotest-assertions = { module = "io.kotlintest:kotlintest-assertions", version.ref = "kotest" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlinReflect" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
+androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTest" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTest" }
+androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTestJunit" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
+awssdk-bom = { module = "software.amazon.awssdk:bom", version.ref = "awsBom" }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+anonyome-license-tools-plugin = { module = "com.anonyome:license-tools", version.ref = "licenseTools" }
+
+[plugins]
+android-library = { id = "com.android.library", version.ref = "agp" }
+apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
+owasp-dependencycheck = { id = "org.owasp.dependencycheck", version.ref = "owaspDependency" }
+kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
+nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublish" }
+jacoco = { id = "jacoco" }

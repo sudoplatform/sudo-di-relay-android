@@ -28,7 +28,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import timber.log.Timber
-import java.lang.IllegalArgumentException
 import java.util.Date
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -347,11 +346,11 @@ class MessagesSystemTest : BaseSystemTest() {
 
         sudoDIRelayClient.subscribeToRelayEvents(
             "subscriber-id-1",
-            messageCreated = { messageList1.add(it) }
+            messageCreated = { messageList1.add(it) },
         )
         sudoDIRelayClient.subscribeToRelayEvents(
             "subscriber-id-2",
-            messageCreated = { messageList2.add(it) }
+            messageCreated = { messageList2.add(it) },
         )
 
         delay(2000)
@@ -402,10 +401,10 @@ class MessagesSystemTest : BaseSystemTest() {
 
         sudoDIRelayClient.subscribeToRelayEvents(
             subscriberId,
-            messageCreated = { messageList1.add(it) }
+            messageCreated = { messageList1.add(it) },
         )
 
-        delay(1000)
+        delay(2000)
 
         if (!postMessageToEndpoint("hello 1", postbox.serviceEndpoint)) {
             fail("http post response with code other than 200..")
@@ -422,7 +421,7 @@ class MessagesSystemTest : BaseSystemTest() {
 
         sudoDIRelayClient.subscribeToRelayEvents(
             subscriberId,
-            messageCreated = { messageList2.add(it) }
+            messageCreated = { messageList2.add(it) },
         )
 
         if (!postMessageToEndpoint("hello 2", postbox.serviceEndpoint)) {
@@ -455,10 +454,10 @@ class MessagesSystemTest : BaseSystemTest() {
         sudoDIRelayClient.subscribeToRelayEvents(
             subscriberId,
             {},
-            { subscriber1Notification = true }
+            { subscriber1Notification = true },
         )
 
-        delay(1000)
+        delay(2000)
 
         if (!postMessageToEndpoint("test", postbox.serviceEndpoint)) {
             fail("http post response with code other than 200..")
@@ -482,7 +481,7 @@ class MessagesSystemTest : BaseSystemTest() {
         sudoDIRelayClient.subscribeToRelayEvents(
             subscriberId,
             {},
-            { subscriber1Notification = true }
+            { subscriber1Notification = true },
         )
 
         delay(1000)
@@ -516,12 +515,12 @@ class MessagesSystemTest : BaseSystemTest() {
 
         sudoDIRelayClient.subscribeToRelayEvents(
             subscriberId1,
-            messageCreated = { subscriber1Notification = true }
+            messageCreated = { subscriber1Notification = true },
         )
 
         sudoDIRelayClient.subscribeToRelayEvents(
             subscriberId2,
-            messageCreated = { subscriber2Notification = true }
+            messageCreated = { subscriber2Notification = true },
         )
 
         delay(2000)
@@ -555,7 +554,7 @@ class MessagesSystemTest : BaseSystemTest() {
         sudoDIRelayClient.subscribeToRelayEvents(
             connectionId,
             {},
-            {}
+            {},
         )
 
         sudoDIRelayClient.unsubscribeAll()
